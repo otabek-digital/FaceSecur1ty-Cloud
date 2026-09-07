@@ -1,29 +1,12 @@
-﻿# FaceSecurity Cloud Management Server (otabek-digital)
+﻿# FaceSecurity Universal Cloud Management (otabek-digital)
 
-Ushbu repozitoriya **FaceSecurity School v1.3** dasturining masofaviy litsenziya va xavfsizlik nazorati uchun xizmat qiladi.
+Ushbu markaziy bulut serveri **FaceSecurity School v1.3** dasturi o'rnatilgan **barcha maktablar** va barcha kompyuterlarni masofadan nazorat qilish, ochish, qulflash va litsenziyalash uchun xizmat qiladi.
 
-## 📱 Telefon orqali boshqarish yo'riqnomasi:
+## 📱 Masofadan Boshqarish Qoidalari:
 
-### 1. Dasturni ochish (Faollashtirish):
-`devices.json` faylini tahrirlab, kerakli kompyuter kodining `status` qiymatini `"ACTIVE"` qilib saqlang:
-```json
-"FS-XXXX-XXXX": {
-  "status": "ACTIVE",
-  "school": "41-Maktab"
-}
-```
-
-### 2. Dasturni masofadan qulflash (Bloklash):
-`status` qiymatini `"BLOCKED"` yoki `"EXPIRED"` qilib saqlang:
-```json
-"FS-XXXX-XXXX": {
-  "status": "BLOCKED",
-  "school": "41-Maktab"
-}
-```
-
-### 3. Barcha maktab qurilmalarini bir vaqtda ochish:
-`"FS-GLOBAL"` kalitining `status` qiymatini `"ACTIVE"` qilish kifoya.
+- **Har qanday maktab va har qanday kompyuter:** Dastur o'rnatilgan har bir kompyuter o'zining kompyuter nomi va maktabi bilan avtomatik ulanadi.
+- **Dasturni ochish (ACTIVE):** Kerakli kompyuter kodi yoki `"FS-GLOBAL"` statusini `"ACTIVE"` qilib saqlash kifoya.
+- **Dasturni qulflash (BLOCKED):** Statusni `"BLOCKED"` qilish orqali dastur bir zumda maktabda yopiladi.
 
 ---
-🔒 **Xavfsizlik:** Faqat **otabek-digital** akkaunti ushbu faylni o'zgartira oladi. Begona shaxslar yoki dasturlar ruxsatsiz o'zgartirish kirita olmaydi.
+🔒 **Xavfsizlik:** Faqat **otabek-digital** akkaunti ushbu tizimga egalik qiladi.

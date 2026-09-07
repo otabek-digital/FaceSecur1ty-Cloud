@@ -106,6 +106,17 @@
 
         #toast { position: fixed; bottom: 24px; right: 24px; background: #0F172A; border: 1px solid var(--accent); color: white; padding: 12px 20px; border-radius: 12px; font-size: 13.5px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: none; z-index: 999; }
     </style>
+<script>
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+document.addEventListener('keydown', function(e) {
+    if (e.keyCode === 123 || 
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || 
+        (e.ctrlKey && e.keyCode === 85)) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
 </head>
 <body>
 
@@ -277,9 +288,21 @@ let cloudDatabase = {
     }
 };
 
-function checkPin() {
+const ALLOWED_PIN_HASHES = [
+    "e968a5283e30a65bc3724d29af64751ae043a6104eb3c30a88e1b6e857c144a6",
+    "f46c8e03371222adf20aa1f9184f7c1e5daac05a51c9f84a2f66f12381cec6a2"
+];
+
+async function sha256Hex(str) {
+    const enc = new TextEncoder();
+    const buf = await crypto.subtle.digest("SHA-256", enc.encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkPin() {
     const p = document.getElementById("pinInput").value.trim();
-    if (p === "20100111" || p === "admin8765") {
+    const h = await sha256Hex(p);
+    if (ALLOWED_PIN_HASHES.includes(h)) {
         sessionStorage.setItem("fss_auth", "1");
         document.getElementById("pinGate").style.display = "none";
         fetchCloudData();
