@@ -1,0 +1,19 @@
+﻿{
+  "version": "1.0",
+  "updated_at": "2026-09-07T22:45:00Z",
+  "description": "FaceSecurity School Cloud Management - otabek-digital",
+  "devices": {
+    "FS-GLOBAL": {
+      "status": "ACTIVE",
+      "school": "41-Maktab",
+      "admin": "otabek-digital",
+      "note": "Barcha maktab qurilmalarini umumiy ochish"
+    },
+    "FS-DEMO-0001": {
+      "status": "ACTIVE",
+      "school": "41-Maktab Asosiy Kirish",
+      "admin": "otabek-digital",
+      "note": "1-kompyuter uchun maxsus kod"
+    }
+  }
+}
