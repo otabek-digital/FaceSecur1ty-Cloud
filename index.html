@@ -1230,36 +1230,39 @@
         // 4. BROADCAST REMOTE COMMANDS (NTFY)
         // ==========================================
         async function broadcastRemoteCommand(targetHwid, cmdStr) {
-            const clean = targetHwid.replace(/^FS-?/i, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-            const channel = (targetHwid === 'GLOBAL') ? 'fss_cmd_global' : `fss_cmd_${clean}`;
+            const cleanLower = targetHwid.replace(/^FS-?/i, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            const cleanUpper = cleanLower.toUpperCase();
             const ts = Math.floor(Date.now() / 1000);
 
             // 1. Signed command
             const sig = await hmacSha256(MASTER_SECRET_SALT, `${cmdStr}|${ts}`);
             const signedPayload = `CMD:${cmdStr}|SIG:${sig}|TS:${ts}`;
+            const rawPayload = `${cmdStr}|${ts}|${sig}`;
 
-            // Post to target channel and global channel
-            try {
-                fetch(`https://ntfy.sh/${channel}`, {
-                    method: 'POST',
-                    body: signedPayload,
-                    headers: { 'Title': 'FaceSecurity Remote Command' }
-                }).catch(() => {});
+            const channels = [];
+            if (targetHwid === 'GLOBAL' || targetHwid === 'FS-GLOBAL') {
+                channels.push('fss_cmd_global');
+            } else {
+                channels.push(`fss_cmd_${cleanLower}`);
+                channels.push(`fss_cmd_${cleanUpper}`);
+                channels.push('fss_cmd_global');
+            }
 
-                // Also post plain command for maximum compatibility
-                fetch(`https://ntfy.sh/${channel}`, {
-                    method: 'POST',
-                    body: `${cmdStr}|${ts}|${sig}`,
-                    headers: { 'Title': 'FaceSecurity Command' }
-                }).catch(() => {});
-
-                if (targetHwid === 'GLOBAL') {
-                    fetch(`https://ntfy.sh/fss_cmd_global`, {
+            for (const ch of channels) {
+                try {
+                    fetch(`https://ntfy.sh/${ch}`, {
                         method: 'POST',
-                        body: signedPayload
+                        body: signedPayload,
+                        headers: { 'Title': 'FaceSecurity Remote Command' }
                     }).catch(() => {});
-                }
-            } catch(e) {}
+
+                    fetch(`https://ntfy.sh/${ch}`, {
+                        method: 'POST',
+                        body: rawPayload,
+                        headers: { 'Title': 'FaceSecurity Command' }
+                    }).catch(() => {});
+                } catch(e) {}
+            }
         }
 
         function setGlobalStatus(status) {
