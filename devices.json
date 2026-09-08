@@ -1,21 +1,14 @@
-﻿{
+{
   "version": "1.0",
-  "updated_at": "2026-09-07T23:25:00Z",
+  "updated_at": "2026-09-08T18:00:00Z",
   "description": "FaceSecurity School Universal Cloud Hub - otabek-digital",
   "master_auth": {
-    "username": "Otabek",
-    "password": ""
+    "username": "admin",
+    "password": "admin"
   },
   "global": {
     "status": "ACTIVE",
     "note": "Barcha maktablar va kompyuterlarni umumiy boshqarish"
   },
-  "devices": {
-    "FS-GLOBAL": {
-      "status": "ACTIVE",
-      "name": "Barcha Kompyuterlar",
-      "school": "Barcha Maktablar",
-      "note": "Umumiy kalit"
-    }
-  }
+  "devices": {}
 }

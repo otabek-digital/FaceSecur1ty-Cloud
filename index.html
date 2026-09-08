@@ -20,7 +20,6 @@
             --accent-red: #ff3b69;
             --accent-red-glow: rgba(255, 59, 105, 0.3);
             --accent-yellow: #ffb800;
-            --accent-yellow-glow: rgba(255, 184, 0, 0.3);
             --accent-purple: #b388ff;
             --accent-purple-glow: rgba(179, 136, 255, 0.35);
             --border-glass: rgba(255, 255, 255, 0.08);
@@ -605,13 +604,13 @@
 
         .device-actions {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 40px;
             gap: 8px;
             margin-top: auto;
         }
 
         .dev-btn {
-            padding: 10px;
+            padding: 10px 6px;
             border-radius: 10px;
             border: 1px solid var(--border-glass);
             background: rgba(255, 255, 255, 0.04);
@@ -622,7 +621,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.2s;
         }
 
@@ -632,7 +631,7 @@
         }
 
         .dev-btn-unlock {
-            background: rgba(0, 245, 160, 0.1);
+            background: rgba(0, 245, 160, 0.12);
             color: var(--accent-green);
             border-color: rgba(0, 245, 160, 0.3);
         }
@@ -642,7 +641,7 @@
         }
 
         .dev-btn-lock {
-            background: rgba(255, 59, 105, 0.1);
+            background: rgba(255, 59, 105, 0.12);
             color: var(--accent-red);
             border-color: rgba(255, 59, 105, 0.3);
         }
@@ -652,7 +651,7 @@
         }
 
         .dev-btn-auth {
-            background: rgba(179, 136, 255, 0.1);
+            background: rgba(179, 136, 255, 0.12);
             color: var(--accent-purple);
             border-color: rgba(179, 136, 255, 0.3);
         }
@@ -661,92 +660,16 @@
             color: #07090e;
         }
 
-        .card-menu-btn {
-            background: transparent;
-            border: none;
+        .dev-btn-del {
+            background: rgba(255, 255, 255, 0.03);
             color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
+            border-color: var(--border-glass);
+            padding: 0;
         }
-        .card-menu-btn:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* MANUAL CODE GENERATOR PANEL */
-        .manual-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            padding: 24px;
-            margin-top: 10px;
-        }
-
-        .manual-card h3 {
-            font-size: 16px;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .manual-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 14px;
-            align-items: end;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .form-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .form-control {
-            padding: 12px 14px;
-            background: rgba(10, 15, 26, 0.85);
-            border: 1px solid var(--border-glass);
-            border-radius: 10px;
-            color: var(--text-main);
-            font-family: var(--font-sans);
-            font-size: 13px;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 12px var(--primary-glow);
-        }
-
-        .code-result-box {
-            margin-top: 16px;
-            background: rgba(0, 242, 254, 0.05);
-            border: 1px dashed var(--primary);
-            border-radius: 12px;
-            padding: 16px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .code-val {
-            font-family: var(--font-mono);
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary);
-            letter-spacing: 2px;
+        .dev-btn-del:hover {
+            background: rgba(255, 59, 105, 0.2);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
         }
 
         /* MODAL STYLES */
@@ -801,6 +724,35 @@
 
         .modal-close:hover {
             color: #fff;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            padding: 12px 14px;
+            background: rgba(10, 15, 26, 0.85);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            outline: none;
+            transition: all 0.25s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
         }
 
         .modal-footer {
@@ -863,6 +815,7 @@
             main { padding: 16px; }
             .global-actions-grid { grid-template-columns: 1fr; }
             .devices-grid { grid-template-columns: 1fr; }
+            .device-actions { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -891,7 +844,7 @@
                 </div>
                 <div class="brand-info">
                     <h1>FaceSecur1ty Cloud</h1>
-                    <span><span class="live-dot"></span> GitHub Jonli Boshqaruv Markazi</span>
+                    <span><span class="live-dot"></span> Jonli Markaziy Boshqaruv</span>
                 </div>
             </div>
             <div class="header-actions">
@@ -912,7 +865,7 @@
             <div class="global-banner">
                 <div class="banner-header">
                     <div class="banner-title">
-                        <span>⚡</span> Butun Tizim Bo'yicha Boshqaruv (Barcha Maktablar & Kompyuterlar)
+                        <span>⚡</span> Umumiy Tizim Boshqaruvi (Barcha Maktablar & Kompyuterlar)
                     </div>
                     <div id="globalStatusBadge" class="global-status-badge">
                         <span class="live-dot"></span> BARCHA KOMPYUTERLAR: OCHIQ (ACTIVE)
@@ -923,7 +876,7 @@
                         🔓 Barcha Maktablarni Ochish
                     </button>
                     <button class="btn-action btn-lock-all" onclick="setGlobalStatus('BLOCKED')">
-                        🔒 Barcha Maktablarni Qulflash
+                        🔒 Barcha Maktablarni Qulflash (Admin Rejimi)
                     </button>
                     <button class="btn-action btn-auth-all" onclick="openAuthModal('GLOBAL')">
                         🔑 Barcha Dasturlarda Login & Parolni O'zgartirish
@@ -935,10 +888,10 @@
             <div class="live-discovery-banner">
                 <div class="live-discovery-left">
                     <span class="live-dot"></span>
-                    <span><b>Jonli Tarmoq Ulangan:</b> Maktablarda dastur ochilishi bilan barcha kompyuterlar ushbu ro'yxatda <b>avtomatik paydo bo'ladi</b>!</span>
+                    <span><b>Jonli Tarmoq Faol:</b> Maktablarda dastur ochilishi bilan barcha kompyuterlar ro'yxatda <b>avtomatik paydo bo'ladi</b>!</span>
                 </div>
-                <button class="hdr-btn" onclick="fetchRecentDiscoveredDevices()" style="padding: 4px 10px; font-size: 12px;">
-                    📡 Qidirish
+                <button class="hdr-btn" onclick="fetchRecentDiscoveredDevices()" style="padding: 4px 12px; font-size: 12px;">
+                    📡 Tarmoqni Qidirish
                 </button>
             </div>
 
@@ -949,7 +902,7 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Maktab, Kompyuter nomi yoki Hardware ID bo'yicha qidirish..." oninput="renderDeviceList()">
                 </div>
                 <div class="quick-stats">
-                    <div class="stat-badge">Jami Kompyuterlar: <b id="statTotal">0</b></div>
+                    <div class="stat-badge">Ulangan Kompyuterlar: <b id="statTotal">0</b></div>
                     <div class="stat-badge">Ochiq: <b id="statActive" style="color: var(--accent-green);">0</b></div>
                     <div class="stat-badge">Qulflangan: <b id="statBlocked" style="color: var(--accent-red);">0</b></div>
                 </div>
@@ -962,37 +915,6 @@
             <div class="devices-grid" id="devicesGrid">
                 <!-- Generated dynamically via JS -->
             </div>
-
-            <!-- MANUAL CODE GENERATOR -->
-            <div class="manual-card">
-                <h3>📟 Qo'lda Unlock/Auth PIN Kod Yaratish (Offline / Dastur ichida terish uchun)</h3>
-                <div class="manual-grid">
-                    <div class="form-group">
-                        <label>Hardware ID yoki Kompyuter Kodi</label>
-                        <input type="text" id="manualHwid" class="form-control" placeholder="Masalan: 41-COMP01 yoki FS-41-COMP01">
-                    </div>
-                    <div class="form-group">
-                        <label>Amal Turi</label>
-                        <select id="manualAction" class="form-control">
-                            <option value="UNLOCK_1H">1 Soatga Ochish</option>
-                            <option value="UNLOCK_24H">1 Kunga Ochish</option>
-                            <option value="UNLOCK_7D">1 Haftaga Ochish</option>
-                            <option value="PERMANENT">Doimiy Faollashtirish (Cheksiz)</option>
-                            <option value="LOCK">Qulflash / Bloklash</option>
-                        </select>
-                    </div>
-                    <button class="btn-add-device" onclick="generateManualPin()" style="height: 44px;">
-                        ⚡ PIN Kod Yaratish
-                    </button>
-                </div>
-                <div class="code-result-box" id="codeResultBox">
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;" id="codeResultLabel">Dasturga kiritiladigan maxsus PIN:</div>
-                        <div class="code-val" id="codeResultValue">FS-893241</div>
-                    </div>
-                    <button class="hdr-btn" onclick="copyText('codeResultValue')">📋 Nusxalash</button>
-                </div>
-            </div>
         </main>
     </div>
 
@@ -1004,8 +926,8 @@
                 <button class="modal-close" onclick="closeModal('deviceModal')">&times;</button>
             </div>
             <div class="form-group">
-                <label>Hardware ID / Qurilma Kodi (Masalan: FS-41-COMP01 yoki 41-COMP01)</label>
-                <input type="text" id="modalHwid" class="form-control" placeholder="FS-41-COMP01">
+                <label>Hardware ID / Qurilma Kodi (Masalan: FS-BE35-250C)</label>
+                <input type="text" id="modalHwid" class="form-control" placeholder="FS-BE35-250C">
             </div>
             <div class="form-group">
                 <label>Kompyuter Nomi (Siz istagan nom)</label>
@@ -1013,10 +935,10 @@
             </div>
             <div class="form-group">
                 <label>Maktab Nomi (Ixtiyoriy maktab)</label>
-                <input type="text" id="modalSchool" class="form-control" placeholder="41-maktab, Toshkent">
+                <input type="text" id="modalSchool" class="form-control" placeholder="41-maktab">
             </div>
             <div class="form-group">
-                <label>Boshlang'ich Holat</label>
+                <label>Holati</label>
                 <select id="modalStatus" class="form-control">
                     <option value="ACTIVE">ACTIVE (Ochiq va Ishlaydi)</option>
                     <option value="BLOCKED">BLOCKED (Qulflangan)</option>
@@ -1033,11 +955,11 @@
     <div class="modal-overlay" id="authModal">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-title" id="authModalTitle">🔑 Dastur Admin Login & Parolini O'zgartirish</div>
+                <div class="modal-title" id="authModalTitle">🔑 Admin Login & Parolini O'zgartirish</div>
                 <button class="modal-close" onclick="closeModal('authModal')">&times;</button>
             </div>
             <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                Ushbu oynada o'zgartirilgan login va parol maktablardagi <b>FaceSecurity dasturi</b> va <b>Sozlamalar (Setup)</b> oynasiga avtomatik tatbiq etiladi!
+                O'zgartirilgan login va parol dasturning <b>Admin rejimi</b> va <b>Sozlamalar (Setup)</b> oynasiga avtomatik tatbiq etiladi!
             </p>
             <input type="hidden" id="authTargetHwid" value="GLOBAL">
             <div class="form-group">
@@ -1069,7 +991,7 @@
                 <button class="modal-close" onclick="closeModal('exportModal')">&times;</button>
             </div>
             <p style="font-size: 13px; color: var(--text-muted);">
-                Quyidagi JSON kodini to'liq nusxalab, GitHub repo'ingizdagi <code>devices.json</code> fayliga joylang:
+                Quyidagi JSON kodini to'liq nusxalab, GitHub repo'ingizdagi <code>devices.json</code> fayliga joylashingiz mumkin:
             </p>
             <textarea id="exportJsonText" class="form-control" style="height: 240px; font-family: var(--font-mono); font-size: 12px;" readonly></textarea>
             <div class="modal-footer">
@@ -1096,10 +1018,8 @@
             }
         });
 
-        // Master Secret Salt (must match C# Core AdminSecurityService.MasterSecretSalt)
         const MASTER_SECRET_SALT = "FaceSecurity_Otabek_Master_2026_SecretSalt_!x99";
 
-        // SHA-256 Hashes of Allowed PINs: 20100111 and admin8765 (Never plain text)
         const ALLOWED_HASHES = [
             "e968a5283e30a65bc3724d29af64751ae043a6104eb3c30a88e1b6e857c144a6", // 20100111
             "f46c8e03371222adf20aa1f9184f7c1e5daac05a51c9f84a2f66f12381cec6a2"  // admin8765
@@ -1149,7 +1069,6 @@
             location.reload();
         }
 
-        // Check if already authenticated in session
         if (sessionStorage.getItem('fss_admin_auth') === '1') {
             document.getElementById('pinGateOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'flex';
@@ -1164,7 +1083,7 @@
         let cloudDatabase = {
             master_auth: {
                 username: "admin",
-                password: "admin8765",
+                password: "admin",
                 updated_at: new Date().toISOString()
             },
             global: {
@@ -1176,6 +1095,11 @@
 
         async function initApp() {
             loadFromLocalStorage();
+            // Purge FS-GLOBAL if it exists
+            if (cloudDatabase.devices && cloudDatabase.devices['FS-GLOBAL']) {
+                delete cloudDatabase.devices['FS-GLOBAL'];
+                saveToLocalStorage();
+            }
             await syncWithGitHub(false);
             renderDeviceList();
             startRealtimeDeviceDiscovery();
@@ -1183,7 +1107,7 @@
         }
 
         function loadFromLocalStorage() {
-            const saved = localStorage.getItem('fss_cloud_db_v2');
+            const saved = localStorage.getItem('fss_cloud_db_v3');
             if (saved) {
                 try {
                     cloudDatabase = JSON.parse(saved);
@@ -1192,7 +1116,7 @@
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('fss_cloud_db_v2', JSON.stringify(cloudDatabase, null, 2));
+            localStorage.setItem('fss_cloud_db_v3', JSON.stringify(cloudDatabase, null, 2));
         }
 
         async function syncWithGitHub(showToastMsg = true) {
@@ -1205,7 +1129,7 @@
                         if (data.global) cloudDatabase.global = data.global;
                         if (data.devices) {
                             for (const k in data.devices) {
-                                if (!cloudDatabase.devices[k]) {
+                                if (k !== 'FS-GLOBAL' && !cloudDatabase.devices[k]) {
                                     cloudDatabase.devices[k] = data.devices[k];
                                 }
                             }
@@ -1226,8 +1150,9 @@
         function registerDiscoveredDevice(info) {
             if (!info || (!info.code && !info.clean)) return;
             const code = info.code || info.clean;
-            const hwid = code.startsWith('FS-') ? code : `FS-${code}`;
+            if (code === 'FS-GLOBAL' || code === 'GLOBAL') return;
 
+            const hwid = code.startsWith('FS-') ? code : `FS-${code}`;
             const isNew = !cloudDatabase.devices[hwid];
             const existing = cloudDatabase.devices[hwid] || {};
 
@@ -1302,24 +1227,38 @@
         }
 
         // ==========================================
-        // 4. BROADCAST REMOTE COMMANDS (CRYPTOGRAPHICALLY SIGNED)
+        // 4. BROADCAST REMOTE COMMANDS (NTFY)
         // ==========================================
         async function broadcastRemoteCommand(targetHwid, cmdStr) {
-            const clean = targetHwid.replace(/^FS-/i, '').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
-            const channel = (targetHwid === 'GLOBAL' || targetHwid === 'FS-GLOBAL') ? 'fss_cmd_global' : `fss_cmd_${clean}`;
+            const clean = targetHwid.replace(/^FS-?/i, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            const channel = (targetHwid === 'GLOBAL') ? 'fss_cmd_global' : `fss_cmd_${clean}`;
             const ts = Math.floor(Date.now() / 1000);
 
-            // Cryptographic HMAC-SHA256 Signature matching C# Core VerifyCommandSignature
+            // 1. Signed command
             const sig = await hmacSha256(MASTER_SECRET_SALT, `${cmdStr}|${ts}`);
-            const payload = `CMD:${cmdStr}|SIG:${sig}|TS:${ts}`;
+            const signedPayload = `CMD:${cmdStr}|SIG:${sig}|TS:${ts}`;
 
-            // Send via HTTP POST to ntfy
+            // Post to target channel and global channel
             try {
                 fetch(`https://ntfy.sh/${channel}`, {
                     method: 'POST',
-                    body: payload,
-                    headers: { 'Title': 'FaceSecurity Cloud Command' }
+                    body: signedPayload,
+                    headers: { 'Title': 'FaceSecurity Remote Command' }
                 }).catch(() => {});
+
+                // Also post plain command for maximum compatibility
+                fetch(`https://ntfy.sh/${channel}`, {
+                    method: 'POST',
+                    body: `${cmdStr}|${ts}|${sig}`,
+                    headers: { 'Title': 'FaceSecurity Command' }
+                }).catch(() => {});
+
+                if (targetHwid === 'GLOBAL') {
+                    fetch(`https://ntfy.sh/fss_cmd_global`, {
+                        method: 'POST',
+                        body: signedPayload
+                    }).catch(() => {});
+                }
             } catch(e) {}
         }
 
@@ -1329,7 +1268,6 @@
                 updated_at: new Date().toISOString()
             };
 
-            // Set all devices accordingly
             for (const key in cloudDatabase.devices) {
                 cloudDatabase.devices[key].status = status;
                 cloudDatabase.devices[key].updated_at = new Date().toISOString();
@@ -1352,7 +1290,16 @@
             saveToLocalStorage();
             broadcastRemoteCommand(hwid, newStatus === 'ACTIVE' ? 'UNLOCK' : 'LOCK');
             renderDeviceList();
-            showToast(`${dev.pc_name || hwid}: ${newStatus === 'ACTIVE' ? 'OCHILDI' : 'QULFLANDI'}!`, newStatus === 'ACTIVE' ? 'success' : 'error');
+            showToast(`${dev.pc_name || hwid}: ${newStatus === 'ACTIVE' ? 'OCHILDI (ACTIVE)' : 'QULFLANDI (BLOCKED)'}!`, newStatus === 'ACTIVE' ? 'success' : 'error');
+        }
+
+        function deleteDevice(hwid) {
+            if (confirm(`"${cloudDatabase.devices[hwid]?.pc_name || hwid}" kompyuterini ro'yxatdan o'chirishni xohlaysizmi?`)) {
+                delete cloudDatabase.devices[hwid];
+                saveToLocalStorage();
+                renderDeviceList();
+                showToast("Kompyuter o'chirildi!", "info");
+            }
         }
 
         // ==========================================
@@ -1424,8 +1371,7 @@
                 gBadge.innerHTML = '<span class="live-dot" style="background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red);"></span> BARCHA KOMPYUTERLAR: QULFLANGAN (BLOCKED)';
             }
 
-            // Stats
-            const keys = Object.keys(cloudDatabase.devices);
+            const keys = Object.keys(cloudDatabase.devices).filter(k => k !== 'FS-GLOBAL');
             let total = keys.length;
             let activeCount = 0;
             let blockedCount = 0;
@@ -1436,7 +1382,6 @@
                 const isActive = d.status === 'ACTIVE';
                 if (isActive) activeCount++; else blockedCount++;
 
-                // Search filter
                 const sText = `${hwid} ${d.pc_name || ''} ${d.school || ''} ${d.status || ''}`.toLowerCase();
                 if (search && !sText.includes(search)) return;
 
@@ -1448,7 +1393,7 @@
                                     <span>💻</span> ${escapeHtml(d.pc_name || hwid)}
                                 </div>
                                 <div class="device-school">
-                                    <span>🏫</span> ${escapeHtml(d.school || 'Maktab biriktirilmagan')}
+                                    <span>🏫</span> ${escapeHtml(d.school || 'Maktab')}
                                 </div>
                             </div>
                             <div class="status-pill ${isActive ? '' : 'blocked'}">
@@ -1463,7 +1408,7 @@
                             </div>
                             <div class="device-info-row">
                                 <span class="info-label">Holati:</span>
-                                <span class="info-val" style="color: ${isActive ? 'var(--accent-green)' : 'var(--accent-red)'};">${isActive ? 'ACTIVE (Ishlaydi)' : 'BLOCKED (Qulf)'}</span>
+                                <span class="info-val" style="color: ${isActive ? 'var(--accent-green)' : 'var(--accent-red)'};">${isActive ? 'ACTIVE (Ishlaydi)' : 'BLOCKED (Qulflangan)'}</span>
                             </div>
                             <div class="device-info-row">
                                 <span class="info-label">Oxirgi faollik:</span>
@@ -1479,7 +1424,10 @@
                                 🔑 Login/Parol
                             </button>
                             <button class="dev-btn" onclick="editDevice('${escapeHtml(hwid)}')">
-                                ✏️ Tahrirlash
+                                ✏️ Tahrir
+                            </button>
+                            <button class="dev-btn dev-btn-del" title="O'chirish" onclick="deleteDevice('${escapeHtml(hwid)}')">
+                                🗑️
                             </button>
                         </div>
                     </div>
@@ -1489,8 +1437,8 @@
             if (!html) {
                 html = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px;">
-                        Hozircha qo'lda kiritilgan yoki ulangan kompyuter yo'q.<br>
-                        Maktabdagi kompyuterda dastur ishga tushishi bilan bu yerda <b>avtomatik paydo bo'ladi</b> yoki yuqoridagi <b>➕ Yangi Kompyuter Qo'shish</b> tugmasini bosing!
+                        Hozircha ulangan kompyuter yo'q.<br>
+                        Maktabdagi kompyuterda dastur ishga tushishi bilan bu yerda <b>avtomatik paydo bo'ladi</b>!
                     </div>
                 `;
             }
@@ -1559,32 +1507,7 @@
         }
 
         // ==========================================
-        // 8. MANUAL OFFLINE CODE GENERATOR
-        // ==========================================
-        async function generateManualPin() {
-            const rawHwid = document.getElementById('manualHwid').value.trim();
-            const action = document.getElementById('manualAction').value;
-
-            if (!rawHwid) {
-                showToast("Hardware ID ni kiriting!", "error");
-                return;
-            }
-
-            const clean = rawHwid.replace(/^FS-/i, '').trim().toUpperCase();
-            
-            // Format: HASH of clean + action + secret
-            const hashRaw = `${clean}_${action}_fss2026masterkey`;
-            const hash = await sha256(hashRaw);
-            const pinCode = `FS-${hash.substring(0, 6).toUpperCase()}`;
-
-            document.getElementById('codeResultLabel').innerText = `${clean} uchun [${action}] kodi:`;
-            document.getElementById('codeResultValue').innerText = pinCode;
-            document.getElementById('codeResultBox').style.display = 'flex';
-            showToast("PIN kod muvaffaqiyatli yaratildi!", "success");
-        }
-
-        // ==========================================
-        // 9. JSON EXPORT & COPY
+        // 8. JSON EXPORT & COPY
         // ==========================================
         function openExportJsonModal() {
             const text = JSON.stringify(cloudDatabase, null, 2);
@@ -1597,13 +1520,6 @@
             navigator.clipboard.writeText(text).then(() => {
                 showToast("devices.json kodi nusxalandi! GitHub'ga qo'yishingiz mumkin.", "success");
                 closeModal('exportModal');
-            });
-        }
-
-        function copyText(elemId) {
-            const text = document.getElementById(elemId).innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast("Nusxalandi: " + text, "info");
             });
         }
 
