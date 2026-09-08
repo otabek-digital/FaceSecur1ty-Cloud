@@ -848,6 +848,9 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button class="hdr-btn" onclick="openKeyGenModal('')" style="border-color: rgba(179, 136, 255, 0.4); color: #d8b4fe;">
+                    🔑 Kalit Generatori
+                </button>
                 <button class="hdr-btn" onclick="openExportJsonModal()">
                     💾 GitHub devices.json
                 </button>
@@ -997,6 +1000,31 @@
             <div class="modal-footer">
                 <button class="hdr-btn" onclick="closeModal('exportModal')">Yopish</button>
                 <button class="btn-add-device" onclick="copyExportJson()">📋 Nusxalash</button>
+            </div>
+        </div>
+    <!-- MODAL: OFFLINE ACTIVATION KEY GENERATOR -->
+    <div class="modal-overlay" id="keyGenModal">
+        <div class="modal-box" style="max-width: 540px;">
+            <div class="modal-header">
+                <div class="modal-title">🔑 Offline Aktivatsiya Kaliti Generatori</div>
+                <button class="modal-close" onclick="closeModal('keyGenModal')">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                Kompyuterda internet bo'lmaganda yoki favqulodda ochish kerak bo'lganda ushbu kalit orqali dasturni ochishingiz mumkin.
+            </p>
+            <div class="form-group">
+                <label>Kompyuter Hardware ID (Qurilma Kodi)</label>
+                <input type="text" id="keyGenHwid" class="form-control" placeholder="Masalan: FS-BE35-250C" oninput="calculateKeyGen()">
+            </div>
+            <div class="form-group">
+                <label>Generatsiya Qilingan Aktivatsiya Kaliti</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="generatedKeyResult" class="form-control" style="font-family: var(--font-mono); font-size: 16px; font-weight: bold; color: var(--accent-green); background: rgba(0,0,0,0.5);" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
+                    <button class="btn-add-device" style="white-space: nowrap; padding: 0 16px;" onclick="copyGeneratedKey()">📋 Nusxalash</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="hdr-btn" onclick="closeModal('keyGenModal')">Yopish</button>
             </div>
         </div>
     </div>
@@ -1426,6 +1454,9 @@
                             <button class="dev-btn dev-btn-auth" onclick="openAuthModal('${escapeHtml(hwid)}')">
                                 🔑 Login/Parol
                             </button>
+                            <button class="dev-btn" style="background: rgba(179, 136, 255, 0.15); border-color: rgba(179, 136, 255, 0.3); color: #d8b4fe;" onclick="openKeyGenModal('${escapeHtml(hwid)}')">
+                                🗝️ Kalit
+                            </button>
                             <button class="dev-btn" onclick="editDevice('${escapeHtml(hwid)}')">
                                 ✏️ Tahrir
                             </button>
@@ -1510,10 +1541,19 @@
         }
 
         // ==========================================
-        // 8. JSON EXPORT & COPY
+        // 8. JSON EXPORT & COPY (1M+ SCALABILITY)
         // ==========================================
         function openExportJsonModal() {
-            const text = JSON.stringify(cloudDatabase, null, 2);
+            const fullDb = {
+                version: "1.3",
+                updated_at: new Date().toISOString(),
+                description: "FaceSecurity School Universal Cloud Hub (1,000,000+ Scale Architecture) - otabek-digital",
+                master_auth: cloudDatabase.master_auth || { username: "admin", password: "admin" },
+                global: cloudDatabase.global || { status: "ACTIVE", note: "Barcha maktablar va 1,000,000+ kompyuterlarni global boshqarish siyosati" },
+                blacklist: cloudDatabase.blacklist || [],
+                devices: cloudDatabase.devices || {}
+            };
+            const text = JSON.stringify(fullDb, null, 2);
             document.getElementById('exportJsonText').value = text;
             document.getElementById('exportModal').style.display = 'flex';
         }
@@ -1523,6 +1563,58 @@
             navigator.clipboard.writeText(text).then(() => {
                 showToast("devices.json kodi nusxalandi! GitHub'ga qo'yishingiz mumkin.", "success");
                 closeModal('exportModal');
+            });
+        }
+
+        // ==========================================
+        // 9. OFFLINE ACTIVATION KEY GENERATOR
+        // ==========================================
+        function cleanMachineCode(code) {
+            if (!code) return "";
+            let c = code.trim().toUpperCase();
+            if (c.startsWith("FS-")) c = c.substring(3);
+            else if (c.startsWith("FS")) c = c.substring(2);
+            c = c.replace(/[^A-Z0-9]/g, "");
+            return c;
+        }
+
+        async function generateRemoteActivationKey(machineCode) {
+            let clean = cleanMachineCode(machineCode);
+            if (!clean) return "";
+            if (clean.length < 8) clean = clean.padEnd(8, '0');
+            const shortCode = clean.substring(0, 8);
+            
+            const sig = await hmacSha256(MASTER_SECRET_SALT, shortCode + "_ACTIVATED");
+            const signHex = sig.substring(0, 8);
+            
+            return `FS-ACT-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
+        }
+
+        async function openKeyGenModal(prefillHwid = '') {
+            document.getElementById('keyGenHwid').value = prefillHwid || '';
+            document.getElementById('keyGenModal').style.display = 'flex';
+            await calculateKeyGen();
+            if (!prefillHwid) document.getElementById('keyGenHwid').focus();
+        }
+
+        async function calculateKeyGen() {
+            const hwid = document.getElementById('keyGenHwid').value.trim();
+            if (!hwid) {
+                document.getElementById('generatedKeyResult').value = '';
+                return;
+            }
+            const key = await generateRemoteActivationKey(hwid);
+            document.getElementById('generatedKeyResult').value = key;
+        }
+
+        function copyGeneratedKey() {
+            const k = document.getElementById('generatedKeyResult').value;
+            if (!k) {
+                showToast("Avval Hardware ID kiriting!", "error");
+                return;
+            }
+            navigator.clipboard.writeText(k).then(() => {
+                showToast("Aktivatsiya kaliti nusxalandi!", "success");
             });
         }
 

@@ -1,14 +1,15 @@
 {
-  "version": "1.0",
-  "updated_at": "2026-09-08T18:00:00Z",
-  "description": "FaceSecurity School Universal Cloud Hub - otabek-digital",
+  "version": "1.3",
+  "updated_at": "2026-09-08T19:00:00Z",
+  "description": "FaceSecurity School Universal Cloud Hub (1,000,000+ Scale Architecture) - otabek-digital",
   "master_auth": {
     "username": "admin",
     "password": "admin"
   },
   "global": {
     "status": "ACTIVE",
-    "note": "Barcha maktablar va kompyuterlarni umumiy boshqarish"
+    "note": "Barcha maktablar va 1,000,000+ kompyuterlarni global boshqarish siyosati"
   },
+  "blacklist": [],
   "devices": {}
 }
