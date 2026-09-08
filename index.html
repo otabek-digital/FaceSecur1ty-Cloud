@@ -384,6 +384,26 @@
             box-shadow: 0 10px 25px var(--accent-purple-glow);
         }
 
+        /* LIVE AUTO-DISCOVERY BANNER */
+        .live-discovery-banner {
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            border-radius: 14px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .live-discovery-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         /* CONTROLS BAR: SEARCH, STATS, ADD */
         .controls-bar {
             display: flex;
@@ -911,6 +931,17 @@
                 </div>
             </div>
 
+            <!-- LIVE AUTO-DISCOVERY STATUS -->
+            <div class="live-discovery-banner">
+                <div class="live-discovery-left">
+                    <span class="live-dot"></span>
+                    <span><b>Jonli Tarmoq Ulangan:</b> Maktablarda dastur ochilishi bilan barcha kompyuterlar ushbu ro'yxatda <b>avtomatik paydo bo'ladi</b>!</span>
+                </div>
+                <button class="hdr-btn" onclick="fetchRecentDiscoveredDevices()" style="padding: 4px 10px; font-size: 12px;">
+                    📡 Qidirish
+                </button>
+            </div>
+
             <!-- CONTROLS & SEARCH -->
             <div class="controls-bar">
                 <div class="search-box">
@@ -1133,6 +1164,8 @@
             loadFromLocalStorage();
             await syncWithGitHub(false);
             renderDeviceList();
+            startRealtimeDeviceDiscovery();
+            fetchRecentDiscoveredDevices();
         }
 
         function loadFromLocalStorage() {
@@ -1156,7 +1189,13 @@
                     if (data && typeof data === 'object') {
                         if (data.master_auth) cloudDatabase.master_auth = data.master_auth;
                         if (data.global) cloudDatabase.global = data.global;
-                        if (data.devices) cloudDatabase.devices = data.devices;
+                        if (data.devices) {
+                            for (const k in data.devices) {
+                                if (!cloudDatabase.devices[k]) {
+                                    cloudDatabase.devices[k] = data.devices[k];
+                                }
+                            }
+                        }
                         saveToLocalStorage();
                         if (showToastMsg) showToast("GitHub bilan muvaffaqiyatli sinxronlandi!", "success");
                     }
@@ -1168,7 +1207,89 @@
         }
 
         // ==========================================
-        // 3. BROADCAST REMOTE COMMANDS (NTFY & LOCAL)
+        // 3. REALTIME DEVICE AUTO-DISCOVERY
+        // ==========================================
+        function registerDiscoveredDevice(info) {
+            if (!info || (!info.code && !info.clean)) return;
+            const code = info.code || info.clean;
+            const hwid = code.startsWith('FS-') ? code : `FS-${code}`;
+
+            const isNew = !cloudDatabase.devices[hwid];
+            const existing = cloudDatabase.devices[hwid] || {};
+
+            cloudDatabase.devices[hwid] = {
+                ...existing,
+                pc_name: info.name || existing.pc_name || hwid,
+                school: (info.school && info.school !== 'Maktab') ? info.school : (existing.school || 'Maktab'),
+                status: info.status || existing.status || 'LOCKED',
+                ver: info.ver || existing.ver || 'v1.3',
+                updated_at: new Date().toISOString()
+            };
+
+            saveToLocalStorage();
+            renderDeviceList();
+
+            if (isNew) {
+                showToast(`⚡ Yangi kompyuter ulandi: ${info.name || hwid} (${info.school || ''})`, "success");
+            }
+        }
+
+        function startRealtimeDeviceDiscovery() {
+            try {
+                const sse1 = new EventSource('https://ntfy.sh/fss_device_registry_otabek/sse');
+                sse1.onmessage = (e) => {
+                    try {
+                        const msgData = JSON.parse(e.data);
+                        if (msgData && msgData.message) {
+                            const parsed = JSON.parse(msgData.message);
+                            registerDiscoveredDevice(parsed);
+                        }
+                    } catch(err) {}
+                };
+
+                const sse2 = new EventSource('https://ntfy.sh/fss_device_registry/sse');
+                sse2.onmessage = (e) => {
+                    try {
+                        const msgData = JSON.parse(e.data);
+                        if (msgData && msgData.message) {
+                            const parsed = JSON.parse(msgData.message);
+                            registerDiscoveredDevice(parsed);
+                        }
+                    } catch(err) {}
+                };
+            } catch(e) {}
+        }
+
+        async function fetchRecentDiscoveredDevices() {
+            try {
+                const urls = [
+                    'https://ntfy.sh/fss_device_registry_otabek/json?poll=1&since=24h',
+                    'https://ntfy.sh/fss_device_registry/json?poll=1&since=24h'
+                ];
+
+                for (const u of urls) {
+                    const resp = await fetch(u);
+                    if (resp.ok) {
+                        const text = await resp.text();
+                        const lines = text.trim().split('\n');
+                        for (const line of lines) {
+                            try {
+                                if (!line) continue;
+                                const item = JSON.parse(line);
+                                if (item && item.message) {
+                                    const parsed = JSON.parse(item.message);
+                                    registerDiscoveredDevice(parsed);
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+                showToast("Tarmoqdagi ulangan kompyuterlar tekshirildi!", "info");
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // 4. BROADCAST REMOTE COMMANDS (NTFY & LOCAL)
         // ==========================================
         async function broadcastRemoteCommand(targetHwid, cmdStr) {
             const clean = targetHwid.replace(/^FS-/i, '').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
@@ -1223,7 +1344,7 @@
         }
 
         // ==========================================
-        // 4. MASTER AUTH (LOGIN & PASSWORD) MANAGEMENT
+        // 5. MASTER AUTH (LOGIN & PASSWORD) MANAGEMENT
         // ==========================================
         function openAuthModal(targetHwid) {
             document.getElementById('authTargetHwid').value = targetHwid;
@@ -1274,7 +1395,7 @@
         }
 
         // ==========================================
-        // 5. RENDERING & UI UPDATES
+        // 6. RENDERING & UI UPDATES
         // ==========================================
         function renderDeviceList() {
             const grid = document.getElementById('devicesGrid');
@@ -1330,7 +1451,7 @@
                             </div>
                             <div class="device-info-row">
                                 <span class="info-label">Holati:</span>
-                                <span class="info-val" style="color: ${isActive ? 'var(--accent-green)' : 'var(--accent-red)'};">${isActive ? 'ACTIVE' : 'BLOCKED'}</span>
+                                <span class="info-val" style="color: ${isActive ? 'var(--accent-green)' : 'var(--accent-red)'};">${isActive ? 'ACTIVE (Ishlaydi)' : 'BLOCKED (Qulf)'}</span>
                             </div>
                             <div class="device-info-row">
                                 <span class="info-label">Oxirgi faollik:</span>
@@ -1356,7 +1477,8 @@
             if (!html) {
                 html = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px;">
-                        Hech qanday kompyuter topilmadi. Yuqoridagi <b>➕ Yangi Kompyuter Qo'shish</b> tugmasini bosing!
+                        Hozircha qo'lda kiritilgan yoki ulangan kompyuter yo'q.<br>
+                        Maktabdagi kompyuterda dastur ishga tushishi bilan bu yerda <b>avtomatik paydo bo'ladi</b> yoki yuqoridagi <b>➕ Yangi Kompyuter Qo'shish</b> tugmasini bosing!
                     </div>
                 `;
             }
@@ -1368,7 +1490,7 @@
         }
 
         // ==========================================
-        // 6. ADD / EDIT DEVICE MODAL
+        // 7. ADD / EDIT DEVICE MODAL
         // ==========================================
         let editingHwid = null;
 
@@ -1425,7 +1547,7 @@
         }
 
         // ==========================================
-        // 7. MANUAL OFFLINE CODE GENERATOR
+        // 8. MANUAL OFFLINE CODE GENERATOR
         // ==========================================
         async function generateManualPin() {
             const rawHwid = document.getElementById('manualHwid').value.trim();
@@ -1450,7 +1572,7 @@
         }
 
         // ==========================================
-        // 8. JSON EXPORT & COPY
+        // 9. JSON EXPORT & COPY
         // ==========================================
         function openExportJsonModal() {
             const text = JSON.stringify(cloudDatabase, null, 2);
