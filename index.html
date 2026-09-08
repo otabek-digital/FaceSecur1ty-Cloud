@@ -1096,7 +1096,10 @@
             }
         });
 
-        // SHA-256 Hashes of Allowed PINs: 20100111 and admin8765
+        // Master Secret Salt (must match C# Core AdminSecurityService.MasterSecretSalt)
+        const MASTER_SECRET_SALT = "FaceSecurity_Otabek_Master_2026_SecretSalt_!x99";
+
+        // SHA-256 Hashes of Allowed PINs: 20100111 and admin8765 (Never plain text)
         const ALLOWED_HASHES = [
             "e968a5283e30a65bc3724d29af64751ae043a6104eb3c30a88e1b6e857c144a6", // 20100111
             "f46c8e03371222adf20aa1f9184f7c1e5daac05a51c9f84a2f66f12381cec6a2"  // admin8765
@@ -1106,6 +1109,17 @@
             const buffer = new TextEncoder().encode(str);
             const digest = await crypto.subtle.digest('SHA-256', buffer);
             return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function hmacSha256(keyStr, messageStr) {
+            const enc = new TextEncoder();
+            const keyData = enc.encode(keyStr);
+            const msgData = enc.encode(messageStr);
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+            return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
         }
 
         async function verifyMasterPin() {
@@ -1284,22 +1298,20 @@
                         }
                     }
                 }
-                showToast("Tarmoqdagi ulangan kompyuterlar tekshirildi!", "info");
             } catch(e) {}
         }
 
         // ==========================================
-        // 4. BROADCAST REMOTE COMMANDS (NTFY & LOCAL)
+        // 4. BROADCAST REMOTE COMMANDS (CRYPTOGRAPHICALLY SIGNED)
         // ==========================================
         async function broadcastRemoteCommand(targetHwid, cmdStr) {
             const clean = targetHwid.replace(/^FS-/i, '').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
             const channel = (targetHwid === 'GLOBAL' || targetHwid === 'FS-GLOBAL') ? 'fss_cmd_global' : `fss_cmd_${clean}`;
             const ts = Math.floor(Date.now() / 1000);
 
-            // Compute security signature
-            const sigRaw = `${cmdStr}:${ts}:facesecurity_remote_2026_salt_998877`;
-            const sig = (await sha256(sigRaw)).substring(0, 16);
-            const payload = `${cmdStr}|${ts}|${sig}`;
+            // Cryptographic HMAC-SHA256 Signature matching C# Core VerifyCommandSignature
+            const sig = await hmacSha256(MASTER_SECRET_SALT, `${cmdStr}|${ts}`);
+            const payload = `CMD:${cmdStr}|SIG:${sig}|TS:${ts}`;
 
             // Send via HTTP POST to ntfy
             try {
