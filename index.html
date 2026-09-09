@@ -2,33 +2,53 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FaceSecur1ty - Cloud Boshqaruv Markazi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FaceSecur1ty Cloud - Boshqaruv Markazi</title>
+    
+    <!-- Meta and PWA tags for mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#060911">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
     <style>
         :root {
-            --bg-dark: #07090e;
-            --bg-card: rgba(16, 22, 34, 0.75);
-            --bg-card-hover: rgba(22, 30, 48, 0.85);
+            --bg-base: #060911;
+            --bg-surface: rgba(13, 19, 33, 0.75);
+            --bg-surface-elevated: rgba(20, 29, 49, 0.85);
+            --bg-glass-input: rgba(6, 11, 22, 0.8);
+            
             --primary: #00f2fe;
             --primary-glow: rgba(0, 242, 254, 0.35);
-            --secondary: #4facfe;
-            --accent-green: #00f5a0;
-            --accent-green-glow: rgba(0, 245, 160, 0.3);
-            --accent-red: #ff3b69;
-            --accent-red-glow: rgba(255, 59, 105, 0.3);
-            --accent-yellow: #ffb800;
-            --accent-purple: #b388ff;
-            --accent-purple-glow: rgba(179, 136, 255, 0.35);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --border-active: rgba(0, 242, 254, 0.3);
+            --secondary: #3b82f6;
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.35);
+            --accent-red: #f43f5e;
+            --accent-red-glow: rgba(244, 63, 94, 0.35);
+            --accent-yellow: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-purple-glow: rgba(139, 92, 246, 0.35);
+            
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(0, 242, 254, 0.45);
+            
             --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --text-dim: #94a3b8;
+            --text-muted: #64748b;
+            
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
+            
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 22px;
+            --radius-full: 9999px;
+            
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         * {
@@ -37,14 +57,16 @@
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--bg-base);
             background-image: 
-                radial-gradient(circle at 15% 15%, rgba(0, 242, 254, 0.06) 0%, transparent 45%),
-                radial-gradient(circle at 85% 85%, rgba(179, 136, 255, 0.05) 0%, transparent 45%),
-                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, transparent 100%);
+                radial-gradient(circle at 10% 10%, rgba(0, 242, 254, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                linear-gradient(180deg, #060911 0%, #03050a 100%);
             background-attachment: fixed;
             color: var(--text-main);
             font-family: var(--font-sans);
@@ -52,263 +74,38 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            letter-spacing: -0.01em;
         }
 
-        /* --- PIN GATING SCREEN --- */
+        /* ------------------ PIN GATE OVERLAY ------------------ */
         #pinGateOverlay {
             position: fixed;
             inset: 0;
             z-index: 99999;
-            background: rgba(7, 9, 14, 0.96);
-            backdrop-filter: blur(25px);
+            background: rgba(4, 7, 14, 0.94);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
-        .pin-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            padding: 40px 32px;
+        .pin-card {
+            background: linear-gradient(135deg, rgba(16, 24, 44, 0.85) 0%, rgba(10, 16, 30, 0.95) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: 28px;
+            padding: 36px 28px;
             width: 100%;
-            max-width: 440px;
+            max-width: 400px;
             text-align: center;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 35px var(--primary-glow);
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .pin-logo {
-            width: 84px;
-            height: 84px;
-            margin: 0 auto 16px;
-            border-radius: 20px;
-            background: rgba(0, 242, 254, 0.08);
-            border: 1px solid var(--border-active);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 25px var(--primary-glow);
-            overflow: hidden;
-        }
-
-        .pin-logo img {
-            width: 68px;
-            height: 68px;
-            object-fit: contain;
-        }
-
-        .pin-box h2 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            letter-spacing: -0.5px;
-        }
-
-        .pin-box p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 24px;
-        }
-
-        .pin-input {
-            width: 100%;
-            padding: 16px 20px;
-            background: rgba(10, 15, 26, 0.85);
-            border: 2px solid var(--border-glass);
-            border-radius: 14px;
-            color: var(--primary);
-            font-family: var(--font-mono);
-            font-size: 20px;
-            letter-spacing: 6px;
-            text-align: center;
-            outline: none;
-            transition: all 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .pin-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 20px var(--primary-glow);
-        }
-
-        .pin-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
-            border: none;
-            border-radius: 14px;
-            color: #07090e;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 8px 25px var(--primary-glow);
-        }
-
-        .pin-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px var(--primary-glow);
-        }
-
-        .pin-error {
-            color: var(--accent-red);
-            font-size: 13px;
-            margin-top: 14px;
-            font-weight: 600;
-            display: none;
-        }
-
-        /* --- MAIN APP CONTAINER --- */
-        #mainApp {
-            display: none;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* HEADER */
-        header {
-            background: rgba(10, 14, 23, 0.85);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border-glass);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            padding: 14px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .brand-logo {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: rgba(0, 242, 254, 0.08);
-            border: 1px solid var(--border-active);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            box-shadow: 0 0 16px var(--primary-glow);
-        }
-
-        .brand-logo img {
-            width: 36px;
-            height: 36px;
-            object-fit: contain;
-        }
-
-        .brand-info h1 {
-            font-size: 18px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.3px;
-        }
-
-        .brand-info span {
-            font-size: 12px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-green);
-            animation: pulseGreen 1.8s infinite;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .hdr-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-glass);
-            color: var(--text-main);
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.25s;
-        }
-
-        .hdr-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--border-active);
-        }
-
-        .hdr-btn.github-sync-btn {
-            background: rgba(0, 242, 254, 0.1);
-            border-color: var(--border-active);
-            color: var(--primary);
-        }
-
-        .github-status-pill {
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 8px;
-            background: rgba(0, 245, 160, 0.15);
-            color: var(--accent-green);
-            border: 1px solid rgba(0, 245, 160, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .github-status-pill.warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--accent-yellow);
-            border-color: rgba(245, 158, 11, 0.3);
-        }
-
-        /* MAIN CONTENT */
-        main {
-            flex: 1;
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        /* GLOBAL ACTION HERO BANNER */
-        .global-banner {
-            background: linear-gradient(135deg, rgba(16, 26, 46, 0.85) 0%, rgba(12, 18, 32, 0.95) 100%);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            padding: 24px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85), 0 0 40px var(--primary-glow);
+            animation: zoomIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
         }
 
-        .global-banner::before {
+        .pin-card::before {
             content: '';
             position: absolute;
             top: 0;
@@ -318,261 +115,679 @@
             background: linear-gradient(90deg, var(--secondary), var(--primary), var(--accent-purple));
         }
 
-        .banner-header {
+        .pin-logo-wrap {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 16px;
+            border-radius: 22px;
+            background: rgba(0, 242, 254, 0.08);
+            border: 1px solid var(--border-focus);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px var(--primary-glow);
+        }
+
+        .pin-logo-wrap img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .pin-card h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .pin-card p {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 24px;
+        }
+
+        .pin-input-field {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg-glass-input);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            color: var(--primary);
+            font-family: var(--font-mono);
+            font-size: 22px;
+            letter-spacing: 8px;
+            text-align: center;
+            outline: none;
+            transition: all 0.25s ease;
             margin-bottom: 18px;
-            flex-wrap: wrap;
+        }
+
+        .pin-input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 25px var(--primary-glow);
+        }
+
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .keypad-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            color: var(--text-main);
+            font-size: 20px;
+            font-weight: 700;
+            padding: 14px 0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .keypad-btn:active {
+            background: rgba(0, 242, 254, 0.2);
+            border-color: var(--primary);
+            transform: scale(0.96);
+        }
+
+        .pin-action-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            border: none;
+            border-radius: var(--radius-md);
+            color: #040711;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 25px var(--primary-glow);
+            letter-spacing: 0.5px;
+        }
+
+        .pin-action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .pin-error-msg {
+            color: var(--accent-red);
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 14px;
+            display: none;
+            animation: shake 0.3s;
+        }
+
+        /* ------------------ MAIN APP WRAPPER ------------------ */
+        #mainApp {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-bottom: calc(76px + var(--safe-bottom));
+        }
+
+        @media (min-width: 769px) {
+            #mainApp {
+                padding-bottom: 24px;
+            }
+        }
+
+        /* ------------------ TOP HEADER ------------------ */
+        header {
+            background: rgba(8, 13, 24, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             gap: 12px;
         }
 
-        .banner-title {
-            font-size: 18px;
-            font-weight: 700;
+        .header-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .global-status-badge {
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(0, 242, 254, 0.08);
+            border: 1px solid var(--border-focus);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 14px var(--primary-glow);
+            flex-shrink: 0;
+        }
+
+        .brand-icon img {
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+        }
+
+        .brand-titles h1 {
+            font-size: 16px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .brand-titles .status-line {
+            font-size: 11px;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .live-indicator {
+            width: 7px;
+            height: 7px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulseGreen 1.8s infinite;
+        }
+
+        /* Desktop top action buttons */
+        .desktop-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .desktop-header-actions {
+                display: none;
+            }
+        }
+
+        .btn-glass-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-glass-chip:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-focus);
+        }
+
+        .btn-glass-chip.active-cloud {
+            background: rgba(0, 242, 254, 0.1);
+            border-color: var(--border-focus);
+            color: var(--primary);
+        }
+
+        .btn-logout {
+            color: var(--accent-red);
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        /* ------------------ MOBILE BOTTOM NAVIGATION DOCK ------------------ */
+        .mobile-bottom-dock {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background: rgba(8, 13, 24, 0.88);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid var(--border-subtle);
+            padding: 8px 12px calc(8px + var(--safe-bottom));
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-dock {
+                display: flex;
+            }
+        }
+
+        .nav-dock-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            min-width: 68px;
+        }
+
+        .nav-dock-item .dock-icon {
+            font-size: 19px;
+            transition: transform 0.2s;
+        }
+
+        .nav-dock-item.active {
+            color: var(--primary);
+            background: rgba(0, 242, 254, 0.08);
+        }
+
+        .nav-dock-item.active .dock-icon {
+            transform: translateY(-2px);
+            filter: drop-shadow(0 0 8px var(--primary));
+        }
+
+        /* ------------------ MAIN LAYOUT ------------------ */
+        main {
+            flex: 1;
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 16px 16px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (min-width: 769px) {
+            main {
+                padding: 24px;
+                gap: 20px;
+            }
+        }
+
+        /* Tab Pages for Mobile and Hybrid Views */
+        .view-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ------------------ GLOBAL STATUS HERO CARD ------------------ */
+        .hero-banner-card {
+            background: linear-gradient(135deg, rgba(16, 26, 48, 0.8) 0%, rgba(10, 16, 32, 0.9) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+        }
+
+        .hero-banner-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary), var(--accent-purple));
+        }
+
+        .hero-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .hero-title {
+            font-size: 15px;
             font-weight: 700;
-            letter-spacing: 0.5px;
-            background: rgba(0, 245, 160, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        .hero-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.12);
             color: var(--accent-green);
             border: 1px solid var(--accent-green);
-            box-shadow: 0 0 15px var(--accent-green-glow);
+            box-shadow: 0 0 14px var(--accent-green-glow);
         }
 
-        .global-status-badge.blocked {
-            background: rgba(255, 59, 105, 0.12);
+        .hero-status-pill.blocked {
+            background: rgba(244, 63, 94, 0.12);
             color: var(--accent-red);
-            border: 1px solid var(--accent-red);
-            box-shadow: 0 0 15px var(--accent-red-glow);
+            border-color: var(--accent-red);
+            box-shadow: 0 0 14px var(--accent-red-glow);
         }
 
-        .global-actions-grid {
+        .hero-actions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
         }
 
-        .btn-action {
-            padding: 16px 20px;
-            border-radius: 14px;
+        @media (max-width: 600px) {
+            .hero-actions-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .hero-actions-grid .btn-auth-all {
+                grid-column: span 2;
+            }
+        }
+
+        .btn-hero {
+            padding: 13px 16px;
+            border-radius: var(--radius-md);
             border: none;
-            font-size: 15px;
+            font-size: 13.5px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: all 0.3s;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-hero:active {
+            transform: scale(0.98);
         }
 
         .btn-unlock-all {
-            background: linear-gradient(135deg, #00b09b, #96c93d);
-            color: #052016;
-            box-shadow: 0 6px 20px var(--accent-green-glow);
-        }
-
-        .btn-unlock-all:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px var(--accent-green-glow);
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px var(--accent-green-glow);
         }
 
         .btn-lock-all {
-            background: linear-gradient(135deg, #e52d27, #b31217);
+            background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
             color: #ffffff;
-            box-shadow: 0 6px 20px var(--accent-red-glow);
-        }
-
-        .btn-lock-all:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px var(--accent-red-glow);
+            box-shadow: 0 4px 15px var(--accent-red-glow);
         }
 
         .btn-auth-all {
-            background: linear-gradient(135deg, #8a2be2, #4facfe);
+            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
             color: #ffffff;
-            box-shadow: 0 6px 20px var(--accent-purple-glow);
+            box-shadow: 0 4px 15px var(--accent-purple-glow);
         }
 
-        .btn-auth-all:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px var(--accent-purple-glow);
+        /* ------------------ QUICK 1-CODE GENERATOR CARD ------------------ */
+        .card-quick-keygen {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
-        /* LIVE AUTO-DISCOVERY BANNER */
-        .live-discovery-banner {
-            background: rgba(0, 242, 254, 0.05);
-            border: 1px solid rgba(0, 242, 254, 0.2);
-            border-radius: 14px;
-            padding: 12px 18px;
+        .keygen-top-title {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            font-size: 13px;
+            align-items: center;
+            margin-bottom: 12px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 6px;
         }
 
-        .live-discovery-left {
+        .keygen-top-title h3 {
+            font-size: 14px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
         }
 
-        /* QUICK KEYGEN / VALIDATOR CARD */
-        .quick-keygen-card {
-            background: linear-gradient(135deg, rgba(14, 23, 42, 0.8) 0%, rgba(10, 16, 28, 0.9) 100%);
-            border: 1px solid var(--border-glass);
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-        }
-
-        .keygen-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .keygen-grid {
+        .keygen-inputs-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 12px;
+            grid-template-columns: 1.2fr 1.5fr auto;
+            gap: 10px;
             align-items: center;
         }
 
         @media (max-width: 768px) {
-            .keygen-grid {
+            .keygen-inputs-grid {
                 grid-template-columns: 1fr;
             }
         }
 
-        /* CONTROLS BAR: SEARCH, STATS, ADD */
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            flex: 1;
-            min-width: 260px;
-            position: relative;
-        }
-
-        .search-input {
+        .input-dark {
             width: 100%;
-            padding: 12px 18px 12px 42px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
+            padding: 12px 14px;
+            background: var(--bg-glass-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
             color: var(--text-main);
-            font-size: 14px;
+            font-size: 13.5px;
             outline: none;
-            transition: all 0.25s;
+            transition: all 0.2s;
         }
 
-        .search-input:focus {
+        .input-dark:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 16px var(--primary-glow);
+            box-shadow: 0 0 14px var(--primary-glow);
         }
 
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            pointer-events: none;
-        }
-
-        .quick-stats {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .stat-badge {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            padding: 8px 14px;
-            border-radius: 10px;
+        .input-dark.result-display {
+            font-family: var(--font-mono);
             font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stat-badge b {
-            color: var(--primary);
-        }
-
-        .btn-add-device {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: #07090e;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
             font-weight: 700;
-            font-size: 14px;
+            color: var(--accent-green);
+            background: rgba(0, 0, 0, 0.6);
+            letter-spacing: 0.5px;
+        }
+
+        .btn-keygen-action {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: #040711;
+            border: none;
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .btn-keygen-action:active {
+            transform: scale(0.97);
+        }
+
+        /* ------------------ REALTIME DISCOVERY BANNER ------------------ */
+        .discovery-banner {
+            background: rgba(0, 242, 254, 0.04);
+            border: 1px solid rgba(0, 242, 254, 0.18);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            gap: 10px;
+        }
+
+        .discovery-content {
+            display: flex;
+            align-items: center;
             gap: 8px;
-            transition: all 0.25s;
-            box-shadow: 0 4px 15px var(--primary-glow);
+            color: var(--text-dim);
         }
 
-        .btn-add-device:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 22px var(--primary-glow);
+        .discovery-content b {
+            color: var(--text-main);
         }
 
-        /* DEVICES GRID */
-        .devices-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 18px;
-        }
-
-        .device-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 18px;
-            padding: 20px;
+        /* ------------------ SEARCH & METRICS BAR ------------------ */
+        .controls-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 10px;
+        }
+
+        @media (min-width: 769px) {
+            .controls-wrapper {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .search-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 11px 16px 11px 38px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-container input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 14px var(--primary-glow);
+        }
+
+        .search-icon-fixed {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .stats-and-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge-count {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            padding: 7px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .badge-count b {
+            color: var(--text-main);
+            margin-left: 3px;
+        }
+
+        .btn-add-primary {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: #040711;
+            border: none;
+            padding: 9px 15px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 12.5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .btn-add-primary:active {
+            transform: scale(0.97);
+        }
+
+        /* ------------------ DEVICES RESPONSIVE GRID ------------------ */
+        .devices-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .devices-grid-layout {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .devices-grid-layout {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 18px;
+            }
+        }
+
+        .device-card-item {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             position: relative;
             overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .device-card:hover {
-            transform: translateY(-4px);
-            background: var(--bg-card-hover);
-            border-color: var(--border-active);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        .device-card-item:hover {
+            background: var(--bg-surface-elevated);
+            border-color: var(--border-focus);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
-        .device-card::before {
+        .device-card-item::before {
             content: '';
             position: absolute;
             left: 0;
@@ -582,553 +797,654 @@
             background: var(--accent-green);
         }
 
-        .device-card.blocked::before {
+        .device-card-item.blocked::before {
             background: var(--accent-red);
         }
 
-        .device-card-header {
+        .card-top-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 12px;
-        }
-
-        .device-title {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .device-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
             gap: 8px;
         }
 
-        .device-school {
-            font-size: 12px;
-            color: var(--text-muted);
+        .pc-info-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .pc-title-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pc-sub-text {
+            font-size: 11.5px;
+            color: var(--text-dim);
             display: flex;
             align-items: center;
             gap: 4px;
         }
 
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+        .device-status-chip {
+            padding: 4px 9px;
+            border-radius: var(--radius-full);
+            font-size: 10.5px;
             font-weight: 700;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            background: rgba(0, 245, 160, 0.12);
+            background: rgba(16, 185, 129, 0.12);
             color: var(--accent-green);
-            border: 1px solid rgba(0, 245, 160, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            flex-shrink: 0;
         }
 
-        .status-pill.blocked {
-            background: rgba(255, 59, 105, 0.12);
+        .device-status-chip.blocked {
+            background: rgba(244, 63, 94, 0.12);
             color: var(--accent-red);
-            border-color: rgba(255, 59, 105, 0.3);
+            border-color: rgba(244, 63, 94, 0.3);
         }
 
-        .device-body {
+        .device-details-box {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 12px;
-            padding: 12px 14px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            gap: 6px;
         }
 
-        .device-info-row {
+        .detail-item-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 11.5px;
         }
 
-        .info-label {
+        .detail-item-row .lbl {
             color: var(--text-muted);
         }
 
-        .info-val {
+        .detail-item-row .val-hwid {
             font-family: var(--font-mono);
             color: var(--primary);
             font-weight: 600;
         }
 
-        .device-actions {
+        .device-action-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .btn-dev {
-            padding: 10px;
-            border-radius: 10px;
+        .btn-card-action {
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
             border: none;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            transition: all 0.25s;
+            gap: 4px;
+            transition: all 0.2s;
         }
 
-        .btn-dev-toggle {
-            background: rgba(255, 255, 255, 0.08);
+        .btn-toggle-status {
+            background: rgba(255, 255, 255, 0.06);
             color: var(--text-main);
-            border: 1px solid var(--border-glass);
+            border: 1px solid var(--border-subtle);
         }
 
-        .btn-dev-toggle:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .btn-toggle-status:active {
+            background: rgba(255, 255, 255, 0.12);
         }
 
-        .btn-dev-keygen {
-            background: rgba(0, 242, 254, 0.15);
+        .btn-card-keygen {
+            background: rgba(0, 242, 254, 0.12);
             color: var(--primary);
-            border: 1px solid rgba(0, 242, 254, 0.3);
+            border: 1px solid var(--border-focus);
         }
 
-        .btn-dev-keygen:hover {
+        .btn-card-keygen:active {
             background: rgba(0, 242, 254, 0.25);
         }
 
-        .btn-dev-delete {
+        .btn-delete-ghost {
             grid-column: span 2;
             background: transparent;
             color: var(--text-muted);
             border: 1px solid transparent;
-            font-size: 11px;
-            padding: 6px;
+            font-size: 10.5px;
+            padding: 4px;
         }
 
-        .btn-dev-delete:hover {
+        .btn-delete-ghost:hover {
             color: var(--accent-red);
-            border-color: rgba(255, 59, 105, 0.2);
-            background: rgba(255, 59, 105, 0.08);
         }
 
-        /* EMPTY STATE */
-        .empty-state {
+        /* ------------------ EMPTY STATE ------------------ */
+        .empty-devices-placeholder {
             grid-column: 1 / -1;
-            padding: 60px 20px;
+            padding: 40px 16px;
             text-align: center;
-            background: var(--bg-card);
-            border: 1px dashed var(--border-glass);
-            border-radius: 20px;
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-subtle);
+            border-radius: var(--radius-lg);
         }
 
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.6;
+        .empty-devices-placeholder .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+            opacity: 0.7;
         }
 
-        /* MODALS */
-        .modal-overlay {
+        /* ------------------ MODALS / BOTTOM SHEETS ------------------ */
+        .modal-backdrop {
             position: fixed;
             inset: 0;
-            z-index: 1000;
-            background: rgba(5, 8, 15, 0.88);
-            backdrop-filter: blur(12px);
+            z-index: 10000;
+            background: rgba(4, 7, 14, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 16px;
         }
 
-        .modal-content {
-            background: #0d1322;
-            border: 1px solid var(--border-active);
-            border-radius: 20px;
-            padding: 28px;
+        .modal-sheet {
+            background: #0d1527;
+            border: 1px solid var(--border-focus);
+            border-radius: 24px;
+            padding: 24px;
             width: 100%;
-            max-width: 520px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px var(--primary-glow);
-            animation: fadeIn 0.3s ease-out;
+            max-width: 480px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 35px var(--primary-glow);
+            animation: sheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .modal-header {
+        @media (max-width: 600px) {
+            .modal-backdrop {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .modal-sheet {
+                border-radius: 24px 24px 0 0;
+                max-width: 100%;
+                padding: 20px 18px calc(24px + var(--safe-bottom));
+                border-bottom: none;
+            }
+        }
+
+        .sheet-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
-        .modal-title {
-            font-size: 18px;
+        .sheet-title {
+            font-size: 16px;
             font-weight: 700;
             color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .modal-close {
-            background: transparent;
+        .sheet-close-btn {
+            background: rgba(255, 255, 255, 0.05);
             border: none;
-            color: var(--text-muted);
-            font-size: 20px;
+            color: var(--text-dim);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 16px;
             cursor: pointer;
-            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .modal-close:hover {
-            color: var(--accent-red);
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
         }
 
-        .form-group {
+        .form-row label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .sheet-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        /* ------------------ TOAST ALERTS ------------------ */
+        #toastContainer {
+            position: fixed;
+            bottom: calc(84px + var(--safe-bottom));
+            left: 16px;
+            right: 16px;
+            z-index: 99999;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 16px;
+            pointer-events: none;
+            align-items: center;
         }
 
-        .form-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
+        @media (min-width: 769px) {
+            #toastContainer {
+                bottom: 24px;
+                left: auto;
+                right: 24px;
+                align-items: flex-end;
+            }
         }
 
-        .form-control {
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-glass);
-            border-radius: 10px;
-            color: var(--text-main);
-            font-size: 14px;
-            outline: none;
-            transition: all 0.25s;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 14px var(--primary-glow);
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 24px;
-        }
-
-        /* TOAST */
-        #toastContainer {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .toast-msg {
-            background: rgba(13, 19, 34, 0.95);
-            border: 1px solid var(--border-active);
-            border-radius: 12px;
+        .toast-bubble {
+            background: rgba(13, 21, 39, 0.96);
+            border: 1px solid var(--border-focus);
+            border-radius: var(--radius-md);
             padding: 12px 18px;
             color: #ffffff;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             display: flex;
             align-items: center;
-            gap: 10px;
-            animation: slideUp 0.3s ease-out;
+            gap: 8px;
+            pointer-events: auto;
+            animation: slideUpToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 420px;
         }
 
-        .toast-msg.success { border-color: var(--accent-green); }
-        .toast-msg.error { border-color: var(--accent-red); }
+        .toast-bubble.success { border-color: var(--accent-green); }
+        .toast-bubble.error { border-color: var(--accent-red); }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.96); }
+        /* ------------------ ANIMATIONS ------------------ */
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes sheetUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUpToast {
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes pulseGreen {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 245, 160, 0.7); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(0, 245, 160, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 245, 160, 0); }
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
         }
     </style>
 </head>
 <body>
 
-    <!-- PIN GATING SCREEN -->
+    <!-- 🔒 PIN GATING SCREEN -->
     <div id="pinGateOverlay">
-        <div class="pin-box">
-            <div class="pin-logo">
-                <img src="https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png" onerror="this.onerror=null; this.src='https://via.placeholder.com/64?text=FS'" alt="Logo">
+        <div class="pin-card">
+            <div class="pin-logo-wrap">
+                <img src="https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=FS'" alt="Logo">
             </div>
             <h2>FaceSecur1ty Cloud</h2>
-            <p>Admin Boshqaruv Markaziga Kirish</p>
-            <input type="password" id="pinInput" class="pin-input" placeholder="••••••••" maxlength="16" autofocus>
-            <button class="pin-btn" onclick="verifyMasterPin()">Kirish</button>
-            <div id="pinError" class="pin-error">Noto'g'ri PIN parol!</div>
+            <p>Admin Boshqaruv Markazi v2.3</p>
+            
+            <input type="password" id="pinInput" class="pin-input-field" placeholder="••••••••" maxlength="16" autofocus inputmode="numeric">
+            
+            <!-- Soft Touch Mobile Keypad for Quick Unlock -->
+            <div class="pin-keypad">
+                <button class="keypad-btn" onclick="appendPinDigit('1')">1</button>
+                <button class="keypad-btn" onclick="appendPinDigit('2')">2</button>
+                <button class="keypad-btn" onclick="appendPinDigit('3')">3</button>
+                <button class="keypad-btn" onclick="appendPinDigit('4')">4</button>
+                <button class="keypad-btn" onclick="appendPinDigit('5')">5</button>
+                <button class="keypad-btn" onclick="appendPinDigit('6')">6</button>
+                <button class="keypad-btn" onclick="appendPinDigit('7')">7</button>
+                <button class="keypad-btn" onclick="appendPinDigit('8')">8</button>
+                <button class="keypad-btn" onclick="appendPinDigit('9')">9</button>
+                <button class="keypad-btn" onclick="clearPinInput()" style="font-size: 14px; color: var(--text-dim);">C</button>
+                <button class="keypad-btn" onclick="appendPinDigit('0')">0</button>
+                <button class="keypad-btn" onclick="backspacePinDigit()" style="font-size: 16px;">⌫</button>
+            </div>
+
+            <button class="pin-action-btn" onclick="verifyMasterPin()">Kirish</button>
+            <div id="pinError" class="pin-error-msg">Noto'g'ri PIN parol!</div>
         </div>
     </div>
 
-    <!-- MAIN APP CONTAINER -->
+    <!-- 🌐 MAIN APP CONTAINER -->
     <div id="mainApp">
-        <!-- HEADER -->
+        <!-- TOP HEADER -->
         <header>
-            <div class="header-left">
-                <div class="brand-logo">
-                    <img src="https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png" onerror="this.onerror=null; this.src='https://via.placeholder.com/36?text=FS'" alt="Logo">
+            <div class="header-brand">
+                <div class="brand-icon">
+                    <img src="https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png" onerror="this.onerror=null; this.src='https://via.placeholder.com/32?text=FS'" alt="Logo">
                 </div>
-                <div class="brand-info">
-                    <h1>FaceSecur1ty Control Hub</h1>
-                    <span><div class="live-dot"></div> Bulut va Real-Vaqt Markazi v2.3</span>
+                <div class="brand-titles">
+                    <h1>FaceSecur1ty Hub</h1>
+                    <div class="status-line">
+                        <div class="live-indicator"></div>
+                        <span id="headerCloudStatus">Bulut va Real-Vaqt Faol</span>
+                    </div>
                 </div>
             </div>
-            <div class="header-actions">
-                <div id="githubStatusPill" class="github-status-pill warning" onclick="openGitHubSettingsModal()" style="cursor: pointer;">
-                    <span>⚙️ GitHub Sync</span>
+
+            <!-- Desktop top action menu -->
+            <div class="desktop-header-actions">
+                <div id="githubStatusPill" class="btn-glass-chip active-cloud" onclick="openGitHubSettingsModal()">
+                    <span>🌐 Bulut: Real-Vaqt Faol ✅</span>
                 </div>
-                <button class="hdr-btn github-sync-btn" onclick="openGitHubSettingsModal()">
-                    <span>⚙️ GitHub Sozlamalari</span>
-                </button>
-                <button class="hdr-btn" onclick="syncWithGitHub(true)">
+                <button class="btn-glass-chip" onclick="syncWithGitHub(true)">
                     <span>🔄 Sinxronlash</span>
                 </button>
-                <button class="hdr-btn" onclick="openUsedCodesModal()">
+                <button class="btn-glass-chip" onclick="openUsedCodesModal()">
                     <span>📜 1-Kodlar Tarixi</span>
                 </button>
-                <button class="hdr-btn" onclick="openPinSettingsModal()">
+                <button class="btn-glass-chip" onclick="openPinSettingsModal()">
                     <span>🔑 PIN O'zgartirish</span>
                 </button>
-                <button class="hdr-btn" onclick="openDevicesJsonModal()">
+                <button class="btn-glass-chip" onclick="openDevicesJsonModal()">
                     <span>💾 devices.json</span>
                 </button>
-                <button class="hdr-btn" onclick="logout()" style="color: var(--accent-red);">
+                <button class="btn-glass-chip btn-logout" onclick="logout()">
                     <span>🚪 Chiqish</span>
                 </button>
             </div>
         </header>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN DASHBOARD CONTENT -->
         <main>
-            <!-- GLOBAL ACTION HERO BANNER -->
-            <div class="global-banner">
-                <div class="banner-header">
-                    <div class="banner-title">
+            <!-- 1. HERO GLOBAL CONTROL -->
+            <div class="hero-banner-card">
+                <div class="hero-header">
+                    <div class="hero-title">
                         <span>🛡️ Global Boshqaruv Siyosati</span>
                     </div>
-                    <div id="globalStatusBadge" class="global-status-badge">
+                    <div id="globalStatusBadge" class="hero-status-pill">
                         <span id="globalStatusText">BARCHA KOMPYUTERLAR: OCHIQ (ACTIVE)</span>
                     </div>
                 </div>
-                <div class="global-actions-grid">
-                    <button class="btn-action btn-unlock-all" onclick="setGlobalStatus('ACTIVE')">
-                        <span>🔓 Barchasini Ochish (Global Unlock)</span>
+                <div class="hero-actions-grid">
+                    <button class="btn-hero btn-unlock-all" onclick="setGlobalStatus('ACTIVE')">
+                        <span>🔓 Barchasini Ochish</span>
                     </button>
-                    <button class="btn-action btn-lock-all" onclick="setGlobalStatus('BLOCKED')">
-                        <span>🔒 Barchasini Qulflash (Global Lock)</span>
+                    <button class="btn-hero btn-lock-all" onclick="setGlobalStatus('BLOCKED')">
+                        <span>🔒 Barchasini Qulflash</span>
                     </button>
-                    <button class="btn-action btn-auth-all" onclick="openKeyGenModal()">
-                        <span>⚡ 1-Kod Aktivatsiya Kalit Yaratish</span>
+                    <button class="btn-hero btn-auth-all" onclick="openKeyGenModal()">
+                        <span>⚡ 1-Kod Kalit Yaratish</span>
                     </button>
                 </div>
             </div>
 
-            <!-- QUICK 1-CODE CHECK & KEY GENERATOR -->
-            <div class="quick-keygen-card">
-                <div class="keygen-header">
-                    <div style="font-weight: 700; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-                        <span>⚡ Tezkor 1-Kod (Hardware ID) Tekshirish va Kalit Olish</span>
-                    </div>
-                    <span style="font-size: 12px; color: var(--text-muted);">Kompyuterdan berilgan 1-Kodni yozing:</span>
+            <!-- 2. QUICK 1-CODE CHECK & KEY GENERATOR -->
+            <div class="card-quick-keygen">
+                <div class="keygen-top-title">
+                    <h3>⚡ Tezkor 1-Kod (Hardware ID) Kalit Olish</h3>
+                    <span style="font-size: 11.5px; color: var(--text-dim);">Kompyuter bergan kodni kiriting:</span>
                 </div>
-                <div class="keygen-grid">
-                    <input type="text" id="quickHwidInput" class="form-control" placeholder="1-Kod (masalan: FS-7A3B-9901 yoki 7A3B9901)" oninput="handleQuickKeygenInput()">
-                    <input type="text" id="quickKeyOutput" class="form-control" style="font-family: var(--font-mono); font-size: 13.5px; font-weight: bold; color: var(--accent-green); background: rgba(0,0,0,0.5);" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
-                    <button class="btn-dev btn-dev-keygen" style="height: 44px; padding: 0 16px;" onclick="copyQuickKeyResult()">📋 Nusxa Olish</button>
+                <div class="keygen-inputs-grid">
+                    <input type="text" id="quickHwidInput" class="input-dark" placeholder="1-Kod (masalan: 7A3B-9901 yoki FS-7A3B-9901)" oninput="handleQuickKeygenInput()">
+                    <input type="text" id="quickKeyOutput" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
+                    <button class="btn-keygen-action" onclick="copyQuickKeyResult()">📋 Nusxalash</button>
                 </div>
             </div>
 
-            <!-- LIVE AUTO-DISCOVERY BANNER -->
-            <div class="live-discovery-banner">
-                <div class="live-discovery-left">
-                    <div class="live-dot"></div>
-                    <span><b>Real-Vaqt Auto-Discovery Faol:</b> Maktab kompyuterlarida FaceSecurity ishga tushishi bilan ular ushbu ro'yxatda avtomatik paydo bo'ladi.</span>
+            <!-- 3. REALTIME AUTO-DISCOVERY BANNER -->
+            <div class="discovery-banner">
+                <div class="discovery-content">
+                    <div class="live-indicator"></div>
+                    <span><b>Real-Vaqt Auto-Discovery Faol:</b> Maktab dasturlari ochilganda ro'yxatda avtomatik paydo bo'ladi.</span>
                 </div>
-                <button class="hdr-btn" onclick="fetchRecentDiscoveredDevices()" style="padding: 4px 10px; font-size: 12px;">
+                <button class="btn-glass-chip" onclick="fetchRecentDiscoveredDevices()" style="padding: 4px 8px; font-size: 11px;">
                     🔄 Yangilash
                 </button>
             </div>
 
-            <!-- CONTROLS BAR -->
-            <div class="controls-bar">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Kompyuter nomi, maktab yoki 1-Kod bo'yicha qidirish..." oninput="renderDeviceList()">
+            <!-- 4. SEARCH & STATS CONTROLS -->
+            <div class="controls-wrapper">
+                <div class="search-container">
+                    <span class="search-icon-fixed">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Kompyuter nomi, maktab yoki 1-Kod bo'yicha qidirish..." oninput="renderDeviceList()">
                 </div>
-                <div class="quick-stats">
-                    <div class="stat-badge">Jami: <b id="totalDevCount">0</b></div>
-                    <div class="stat-badge">Faol: <b id="activeDevCount" style="color: var(--accent-green);">0</b></div>
-                    <div class="stat-badge">Qulflangan: <b id="blockedDevCount" style="color: var(--accent-red);">0</b></div>
+                <div class="stats-and-buttons">
+                    <div class="badge-count">Jami: <b id="totalDevCount">0</b></div>
+                    <div class="badge-count">Faol: <b id="activeDevCount" style="color: var(--accent-green);">0</b></div>
+                    <div class="badge-count">Qulflangan: <b id="blockedDevCount" style="color: var(--accent-red);">0</b></div>
+                    <button class="btn-glass-chip" onclick="clearAllDevices()" title="Noma'lum qurilmalarni tozalash">
+                        <span>🧹 Tozalash</span>
+                    </button>
+                    <button class="btn-add-primary" onclick="openAddDeviceModal()">
+                        <span>➕ Kompyuter Qo'shish</span>
+                    </button>
                 </div>
-                <button class="btn-dev btn-dev-delete" style="padding: 10px 14px;" onclick="clearAllDevices()" title="Noma'lum yoki eski qurilmalarni tozalash">
-                    <span>🧹 Ro'yxatni Tozalash</span>
-                </button>
-                <button class="btn-add-device" onclick="openAddDeviceModal()">
-                    <span>➕ Yangi Kompyuter Qo'shish</span>
-                </button>
             </div>
 
-            <!-- DEVICES GRID -->
-            <div id="devicesGrid" class="devices-grid">
-                <!-- Dynamically rendered devices -->
+            <!-- 5. DEVICES GRID -->
+            <div id="devicesGrid" class="devices-grid-layout">
+                <!-- Dynamically rendered device cards -->
             </div>
         </main>
+
+        <!-- 📱 MOBILE BOTTOM NAVIGATION DOCK -->
+        <div class="mobile-bottom-dock">
+            <button class="nav-dock-item active" onclick="switchMobileTab('dashboard')">
+                <span class="dock-icon">🖥️</span>
+                <span>Asosiy</span>
+            </button>
+            <button class="nav-dock-item" onclick="openKeyGenModal()">
+                <span class="dock-icon">⚡</span>
+                <span>Kalit</span>
+            </button>
+            <button class="nav-dock-item" onclick="openUsedCodesModal()">
+                <span class="dock-icon">📜</span>
+                <span>Tarix</span>
+            </button>
+            <button class="nav-dock-item" onclick="openMobileSettingsModal()">
+                <span class="dock-icon">⚙️</span>
+                <span>Sozlamalar</span>
+            </button>
+        </div>
     </div>
 
+    <!-- ==================== MODALS & BOTTOM SHEETS ==================== -->
+
     <!-- MODAL: ADD / EDIT DEVICE -->
-    <div id="addDeviceModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">➕ Yangi Kompyuter Qo'shish</div>
-                <button class="modal-close" onclick="closeModal('addDeviceModal')">&times;</button>
+    <div id="addDeviceModal" class="modal-backdrop">
+        <div class="modal-sheet">
+            <div class="sheet-top">
+                <div class="sheet-title">➕ Yangi Kompyuter Qo'shish</div>
+                <button class="sheet-close-btn" onclick="closeModal('addDeviceModal')">&times;</button>
             </div>
-            <div class="form-group">
+            <div class="form-row">
                 <label>1-Kod (Hardware ID)</label>
-                <input type="text" id="devHwid" class="form-control" placeholder="Masalan: FS-7A3B-9901 yoki 7A3B9901">
+                <input type="text" id="devHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901 yoki 7A3B9901">
             </div>
-            <div class="form-group">
+            <div class="form-row">
                 <label>Kompyuter Nomi / Foydalanuvchi</label>
-                <input type="text" id="devName" class="form-control" placeholder="Masalan: 211-xona-20 yoki Asosiy PC">
+                <input type="text" id="devName" class="input-dark" placeholder="Masalan: 211-xona-20 yoki Asosiy PC">
             </div>
-            <div class="form-group">
+            <div class="form-row">
                 <label>Maktab / Tashkilot Nomi</label>
-                <input type="text" id="devSchool" class="form-control" placeholder="Masalan: 21-Maktab">
+                <input type="text" id="devSchool" class="input-dark" placeholder="Masalan: 21-Maktab">
             </div>
-            <div class="form-group">
+            <div class="form-row">
                 <label>Boshlang'ich Holati</label>
-                <select id="devStatus" class="form-control">
+                <select id="devStatus" class="input-dark">
                     <option value="ACTIVE">OCHIQ (ACTIVE)</option>
                     <option value="BLOCKED">QULFLANGAN (BLOCKED)</option>
                 </select>
             </div>
-            <div class="modal-footer">
-                <button class="hdr-btn" onclick="closeModal('addDeviceModal')">Bekor Qilish</button>
-                <button class="btn-add-device" onclick="saveNewDevice()">💾 Saqlash</button>
+            <div class="sheet-footer">
+                <button class="btn-glass-chip" onclick="closeModal('addDeviceModal')">Bekor Qilish</button>
+                <button class="btn-add-primary" onclick="saveNewDevice()">💾 Saqlash</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: GITHUB SETTINGS -->
-    <div id="gitHubSettingsModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">⚙️ GitHub Avto-Commit Sozlamalari</div>
-                <button class="modal-close" onclick="closeModal('gitHubSettingsModal')">&times;</button>
+    <!-- MODAL: KEY GENERATOR FULL -->
+    <div id="keyGenModal" class="modal-backdrop">
+        <div class="modal-sheet">
+            <div class="sheet-top">
+                <div class="sheet-title">⚡ 1-Kod Aktivatsiya Generatori</div>
+                <button class="sheet-close-btn" onclick="closeModal('keyGenModal')">&times;</button>
             </div>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
-                Paneldan kiritilgan barcha o'zgarishlar (qulflash, ochish, yangi kompyuter qo'shish) to'g'ridan-to'g'ri GitHub repository dagi <code>devices.json</code> fayliga commit bo'lib tushadi.
-            </p>
-            <div class="form-group">
-                <label>GitHub Repository (Owner/Repo)</label>
-                <input type="text" id="ghRepoInput" class="form-control" placeholder="otabek-digital/FaceSecur1ty-Cloud" value="otabek-digital/FaceSecur1ty-Cloud">
-            </div>
-            <div class="form-group">
-                <label>GitHub Personal Access Token (PAT)</label>
-                <input type="password" id="ghTokenInput" class="form-control" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                <span style="font-size: 11px; color: var(--text-muted);">Token faqat sizning brauzeringizda xavfsiz saqlanadi. (repo huquqi bilan)</span>
-            </div>
-            <div class="modal-footer">
-                <button class="hdr-btn" onclick="closeModal('gitHubSettingsModal')">Bekor Qilish</button>
-                <button class="btn-add-device" onclick="saveGitHubSettings()">💾 Saqlash va Sinxronlash</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: KEY GENERATOR -->
-    <div id="keyGenModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">⚡ 1-Kod Aktivatsiya Kalit Generatori</div>
-                <button class="modal-close" onclick="closeModal('keyGenModal')">&times;</button>
-            </div>
-            <div class="form-group">
+            <div class="form-row">
                 <label>Kompyuterning 1-Kodi (Hardware ID)</label>
-                <input type="text" id="keyGenHwid" class="form-control" placeholder="Masalan: FS-7A3B-9901" oninput="calculateKeyGen()">
+                <input type="text" id="keyGenHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901" oninput="calculateKeyGen()">
             </div>
-            <div class="form-group">
-                <label>Aktivatsiya Kaliti (Dasturga kiritiladigan kod):</label>
-                <input type="text" id="generatedKeyResult" class="form-control" style="font-family: var(--font-mono); font-size: 16px; font-weight: bold; color: var(--accent-green); background: rgba(0,0,0,0.5);" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
+            <div class="form-row">
+                <label>Aktivatsiya Kaliti (Dasturga kiritiladi):</label>
+                <input type="text" id="generatedKeyResult" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
             </div>
-            <div class="modal-footer">
-                <button class="hdr-btn" onclick="closeModal('keyGenModal')">Yopish</button>
-                <button class="btn-dev btn-dev-keygen" style="padding: 10px 18px;" onclick="copyGeneratedKey()">📋 Kalitni Nusxalash</button>
+            <div class="sheet-footer">
+                <button class="btn-glass-chip" onclick="closeModal('keyGenModal')">Yopish</button>
+                <button class="btn-keygen-action" onclick="copyGeneratedKey()">📋 Nusxalash</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: USED CODES HISTORY -->
-    <div id="usedCodesModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 620px;">
-            <div class="modal-header">
-                <div class="modal-title">📜 Ishlatilgan 1-Kodlar Tarixi (Bir Martalik)</div>
-                <button class="modal-close" onclick="closeModal('usedCodesModal')">&times;</button>
+    <div id="usedCodesModal" class="modal-backdrop">
+        <div class="modal-sheet" style="max-width: 580px;">
+            <div class="sheet-top">
+                <div class="sheet-title">📜 Ishlatilgan 1-Kodlar Tarixi</div>
+                <button class="sheet-close-btn" onclick="closeModal('usedCodesModal')">&times;</button>
             </div>
-            <div style="max-height: 380px; overflow-y: auto; padding-right: 6px;">
+            <div style="max-height: 380px; overflow-y: auto; padding-right: 4px;">
                 <div id="usedCodesList"></div>
             </div>
-            <div class="modal-footer">
-                <button class="hdr-btn" onclick="closeModal('usedCodesModal')">Yopish</button>
+            <div class="sheet-footer">
+                <button class="btn-glass-chip" onclick="closeModal('usedCodesModal')">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MOBILE QUICK SETTINGS -->
+    <div id="mobileSettingsModal" class="modal-backdrop">
+        <div class="modal-sheet">
+            <div class="sheet-top">
+                <div class="sheet-title">⚙️ Boshqaruv Sozlamalari</div>
+                <button class="sheet-close-btn" onclick="closeModal('mobileSettingsModal')">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); openGitHubSettingsModal();">
+                    <span>⚙️ GitHub Avto-Sinxronlash</span>
+                </button>
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); syncWithGitHub(true);">
+                    <span>🔄 Real-Vaqt Sinxronlash</span>
+                </button>
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); openPinSettingsModal();">
+                    <span>🔑 PIN Parolni O'zgartirish</span>
+                </button>
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); openDevicesJsonModal();">
+                    <span>💾 devices.json Eksport / Import</span>
+                </button>
+                <button class="btn-glass-chip btn-logout" style="justify-content: flex-start; padding: 14px 16px; margin-top: 10px;" onclick="logout()">
+                    <span>🚪 Tizimdan Chiqish</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GITHUB SETTINGS -->
+    <div id="gitHubSettingsModal" class="modal-backdrop">
+        <div class="modal-sheet">
+            <div class="sheet-top">
+                <div class="sheet-title">⚙️ GitHub Avto-Commit Sozlamalari</div>
+                <button class="sheet-close-btn" onclick="closeModal('gitHubSettingsModal')">&times;</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.45;">
+                O'zgarishlar to'g'ridan-to'g'ri GitHub repository dagi <code>devices.json</code> fayliga avto-commit qilinishi mumkin.
+            </p>
+            <div class="form-row">
+                <label>GitHub Repository (Owner/Repo)</label>
+                <input type="text" id="ghRepoInput" class="input-dark" placeholder="otabek-digital/FaceSecur1ty-Cloud" value="otabek-digital/FaceSecur1ty-Cloud">
+            </div>
+            <div class="form-row">
+                <label>GitHub Personal Access Token (PAT) - Ixtiyoriy</label>
+                <input type="password" id="ghTokenInput" class="input-dark" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Token faqat sizning brauzeringizda xavfsiz saqlanadi.</span>
+            </div>
+            <div class="sheet-footer">
+                <button class="btn-glass-chip" onclick="closeModal('gitHubSettingsModal')">Bekor Qilish</button>
+                <button class="btn-add-primary" onclick="saveGitHubSettings()">💾 Saqlash va Sinxronlash</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: DEVICES.JSON EXPORT / IMPORT -->
-    <div id="devicesJsonModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 650px;">
-            <div class="modal-header">
-                <div class="modal-title">💾 devices.json Fayli (Eksport / Import)</div>
-                <button class="modal-close" onclick="closeModal('devicesJsonModal')">&times;</button>
+    <div id="devicesJsonModal" class="modal-backdrop">
+        <div class="modal-sheet" style="max-width: 600px;">
+            <div class="sheet-top">
+                <div class="sheet-title">💾 devices.json Fayli</div>
+                <button class="sheet-close-btn" onclick="closeModal('devicesJsonModal')">&times;</button>
             </div>
-            <div class="form-group">
-                <label>GitHub va Tizim uchun JSON ma'lumotlari:</label>
-                <textarea id="devicesJsonArea" class="form-control" rows="12" style="font-family: var(--font-mono); font-size: 12px;"></textarea>
+            <div class="form-row">
+                <label>JSON ma'lumotlari:</label>
+                <textarea id="devicesJsonArea" class="input-dark" rows="10" style="font-family: var(--font-mono); font-size: 11.5px;"></textarea>
             </div>
-            <div class="modal-footer">
-                <button class="hdr-btn" onclick="copyDevicesJson()">📋 Nusxa Olish</button>
-                <button class="hdr-btn" onclick="downloadDevicesJson()">⬇️ Yuklab Olish</button>
-                <button class="btn-add-device" onclick="importDevicesJson()">📥 Saqlash</button>
+            <div class="sheet-footer" style="flex-wrap: wrap;">
+                <button class="btn-glass-chip" onclick="copyDevicesJson()">📋 Nusxalash</button>
+                <button class="btn-glass-chip" onclick="downloadDevicesJson()">⬇️ Yuklab Olish</button>
+                <button class="btn-add-primary" onclick="importDevicesJson()">📥 Saqlash</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: PIN SETTINGS -->
-    <div id="pinSettingsModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">🔑 PIN Parolni O'zgartirish</div>
-                <button class="modal-close" onclick="closeModal('pinSettingsModal')">&times;</button>
+    <div id="pinSettingsModal" class="modal-backdrop">
+        <div class="modal-sheet">
+            <div class="sheet-top">
+                <div class="sheet-title">🔑 PIN Parolni O'zgartirish</div>
+                <button class="sheet-close-btn" onclick="closeModal('pinSettingsModal')">&times;</button>
             </div>
-            <div class="form-group">
+            <div class="form-row">
                 <label>Yangi PIN Parol (Kamida 4 ta belgi)</label>
-                <input type="password" id="newPinInput" class="form-control" placeholder="Yangi PIN">
+                <input type="password" id="newPinInput" class="input-dark" placeholder="Yangi PIN">
             </div>
-            <div class="form-group">
+            <div class="form-row">
                 <label>Yangi PIN Parolni Qayta Kiriting</label>
-                <input type="password" id="confirmPinInput" class="form-control" placeholder="Qayta kiriting">
+                <input type="password" id="confirmPinInput" class="input-dark" placeholder="Qayta kiriting">
             </div>
-            <div class="modal-footer">
-                <button class="hdr-btn" onclick="closeModal('pinSettingsModal')">Bekor Qilish</button>
-                <button class="btn-add-device" onclick="saveNewPin()">💾 PIN Parolni Saqlash</button>
+            <div class="sheet-footer">
+                <button class="btn-glass-chip" onclick="closeModal('pinSettingsModal')">Bekor Qilish</button>
+                <button class="btn-add-primary" onclick="saveNewPin()">💾 Saqlash</button>
             </div>
         </div>
     </div>
@@ -1150,7 +1466,7 @@
             }
         });
 
-        // Dynamic secret reconstruction from obfuscated byte matrix
+        // Dynamic secret reconstruction
         const _0xM = [70,97,99,101,83,101,99,117,114,105,116,121,95,79,116,97,98,101,107,95,77,97,115,116,101,114,95,50,48,50,54,95,83,101,99,114,101,116,83,97,108,116,95,33,120,57,57];
         function _getMS() {
             return String.fromCharCode.apply(null, _0xM);
@@ -1173,12 +1489,27 @@
             return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
         }
 
-        // Salted PIN verification routine
         async function calculateSaltedPinHash(pinStr) {
             const ms = _getMS();
             const h1 = await sha256(pinStr + "_" + ms);
             const h2 = await sha256(h1 + "_PEPPER_2026");
             return h2;
+        }
+
+        function appendPinDigit(d) {
+            const el = document.getElementById('pinInput');
+            if (el.value.length < 16) {
+                el.value += d;
+            }
+        }
+
+        function clearPinInput() {
+            document.getElementById('pinInput').value = '';
+        }
+
+        function backspacePinDigit() {
+            const el = document.getElementById('pinInput');
+            el.value = el.value.slice(0, -1);
         }
 
         async function verifyMasterPin() {
@@ -1198,7 +1529,6 @@
             const inputH = await calculateSaltedPinHash(input);
             const customH = localStorage.getItem('fss_custom_salted_pin');
 
-            // Default authorized pins (20100111, admin8765, admin)
             const d1 = await calculateSaltedPinHash("20100111");
             const d2 = await calculateSaltedPinHash("admin8765");
             const d3 = await calculateSaltedPinHash("admin");
@@ -1261,6 +1591,14 @@
             showToast("✅ Yangi PIN parol muvaffaqiyatli saqlandi!", "success");
         }
 
+        function openMobileSettingsModal() {
+            document.getElementById('mobileSettingsModal').style.display = 'flex';
+        }
+
+        function switchMobileTab(tabName) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         if (sessionStorage.getItem('fss_admin_auth') === '1') {
             document.getElementById('pinGateOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'flex';
@@ -1299,14 +1637,16 @@
         function updateGitHubStatusUI() {
             const token = getGitHubToken();
             const pill = document.getElementById('githubStatusPill');
+            const hdrStat = document.getElementById('headerCloudStatus');
             if (pill) {
                 if (token) {
-                    pill.className = 'github-status-pill';
                     pill.innerHTML = '<span>🌐 GitHub: Ulangan ✅</span>';
                 } else {
-                    pill.className = 'github-status-pill warning';
-                    pill.innerHTML = '<span>⚠️ GitHub PAT Kerak</span>';
+                    pill.innerHTML = '<span>🌐 Bulut: Real-Vaqt Faol ✅</span>';
                 }
+            }
+            if (hdrStat) {
+                hdrStat.innerText = token ? 'GitHub & Real-Vaqt Ulangan' : 'Bulut va Real-Vaqt Faol';
             }
         }
 
@@ -1336,7 +1676,6 @@
                 const url = `https://api.github.com/repos/${repo}/contents/devices.json`;
                 let currentSha = null;
                 
-                // 1. Get current SHA
                 const getResp = await fetch(url, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1348,7 +1687,6 @@
                     currentSha = getJson.sha;
                 }
 
-                // 2. Put updated content
                 const contentJsonStr = JSON.stringify(db, null, 2);
                 const contentBase64 = btoa(unescape(encodeURIComponent(contentJsonStr)));
 
@@ -1367,15 +1705,11 @@
                 });
 
                 if (putResp.ok) {
-                    showToast("✅ GitHub repository ga commit muvaffaqiyatli saqlandi!", "success");
+                    showToast("✅ GitHub repository ga commit saqlandi!", "success");
                     return true;
-                } else {
-                    const errObj = await putResp.json();
-                    console.warn("GitHub commit error:", errObj);
-                    return false;
                 }
+                return false;
             } catch(e) {
-                console.warn("pushToGitHubAsync exception:", e);
                 return false;
             }
         }
@@ -1429,7 +1763,7 @@
                     }
                 }
             } catch(e) {
-                if (showToastMsg) showToast("GitHub'dan ma'lumot olishda xatolik (Lokal ma'lumot ishlatilmoqda)", "info");
+                if (showToastMsg) showToast("Lokal ma'lumotlar bilan ishlash davom etmoqda", "info");
             }
             renderDeviceList();
         }
@@ -1468,19 +1802,16 @@
             const ver = info.ver || 'v2.3';
             const ts = info.ts;
 
-            // Strict HMAC signature check for real-time authenticity
+            // Strict HMAC signature check for authenticity
             if (info.sig && ts) {
                 const ms = _getMS();
                 const fullCode = info.code || (`FS-${clean}`);
                 const rawSig = `${fullCode}|${clean}|${compName}|${schoolName}|${status}|${ver}|${ts}`;
                 const expectedSig = await hmacSha256(ms, rawSig);
                 if (info.sig.toUpperCase() !== expectedSig.toUpperCase()) {
-                    console.warn("Rad etildi: Imzo mos kelmadi (Noma'lum kompyuter):", info);
                     return;
                 }
             } else if (!info.manuallyAdded) {
-                // Ignore unsigned heartbeats from public or legacy sources
-                console.warn("Rad etildi: Imzosiz xabar:", info);
                 return;
             }
 
@@ -1501,7 +1832,7 @@
             renderDeviceList();
 
             if (isNew) {
-                showToast(`⚡ Yangi kompyuter ulandi: ${compName || hwid} (${schoolName})`, "success");
+                showToast(`⚡ Yangi kompyuter ulandi: ${compName || hwid}`, "success");
             }
         }
 
@@ -1540,17 +1871,17 @@
                             }
                         } catch(e) {}
                     }
-                    showToast("Qurilmalar ro'yxati yangilandi", "info");
+                    showToast("Qurilmalar yangilandi", "info");
                 }
             } catch(e) {}
         }
 
         function clearAllDevices() {
-            if (confirm("Haqiqatdan ham barcha kompyuterlarni ro'yxatdan tozalashni xohlaysizmi?\n\n(Haqiqiy faol kompyuterlar keyingi signali orqali avtomatik qayta qo'shiladi)")) {
+            if (confirm("Haqiqatdan ham ro'yxatni tozalashni xohlaysizmi?\n\n(Haqiqiy kompyuterlar keyingi signali orqali avtomatik qayta qo'shiladi)")) {
                 cloudDatabase.devices = {};
                 saveToLocalStorageAndCloud();
                 renderDeviceList();
-                showToast("🧹 Ro'yxat tozalandi! Faqat haqiqiy kompyuterlar avtomatik ulanadi.", "info");
+                showToast("🧹 Ro'yxat tozalandi!", "info");
             }
         }
 
@@ -1634,16 +1965,16 @@
         }
 
         function deleteDevice(hwid) {
-            if (confirm(`"${cloudDatabase.devices[hwid]?.pc_name || hwid}" kompyuterini ro'yxatdan o'chirishni xohlaysizmi?`)) {
+            if (confirm(`"${cloudDatabase.devices[hwid]?.pc_name || hwid}" kompyuterini o'chirishni xohlaysizmi?`)) {
                 delete cloudDatabase.devices[hwid];
                 saveToLocalStorageAndCloud();
                 renderDeviceList();
-                showToast("Kompyuter ro'yxatdan o'chirildi!", "info");
+                showToast("Kompyuter o'chirildi!", "info");
             }
         }
 
         // ==========================================
-        // 5. KEYGEN & 1-CODE ONE-TIME MANAGEMENT
+        // 5. KEYGEN & 1-CODE MANAGEMENT
         // ==========================================
         function cleanMachineCode(machineCode) {
             if (!machineCode) return "";
@@ -1745,20 +2076,20 @@
             const keys = Object.keys(used);
 
             if (keys.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 30px 0;">Hozircha birorta 1-kod ishlatilmagan.</div>';
+                container.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 30px 0; font-size: 13px;">Hozircha birorta 1-kod ishlatilmagan.</div>';
             } else {
                 keys.reverse().forEach(k => {
                     const item = used[k];
                     const row = document.createElement('div');
-                    row.style.cssText = 'background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;';
+                    row.style.cssText = 'background: rgba(0,0,0,0.35); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;';
                     row.innerHTML = `
-                        <div>
-                            <div style="font-weight: bold; color: var(--primary); font-family: var(--font-mono); font-size: 13.5px;">${item.hwid || k}</div>
-                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Kalit: <span style="color: var(--accent-green); font-family: var(--font-mono);">${item.key || ''}</span></div>
+                        <div style="overflow: hidden;">
+                            <div style="font-weight: bold; color: var(--primary); font-family: var(--font-mono); font-size: 13px;">${item.hwid || k}</div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 3px; word-break: break-all;">Kalit: <span style="color: var(--accent-green); font-family: var(--font-mono);">${item.key || ''}</span></div>
                         </div>
-                        <div style="text-align: right;">
-                            <span style="font-size: 11px; color: var(--accent-yellow); background: rgba(255,184,0,0.1); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,184,0,0.3);">Bir martalik ishlatildi</span>
-                            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">${new Date(item.used_at).toLocaleString()}</div>
+                        <div style="text-align: right; flex-shrink: 0;">
+                            <span style="font-size: 10px; color: var(--accent-yellow); background: rgba(245,158,11,0.12); padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.3);">Bir martalik</span>
+                            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">${new Date(item.used_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
                         </div>
                     `;
                     container.appendChild(row);
@@ -1780,10 +2111,10 @@
             const badge = document.getElementById('globalStatusBadge');
             const badgeText = document.getElementById('globalStatusText');
             if (globStatus === 'ACTIVE') {
-                badge.className = 'global-status-badge';
+                badge.className = 'hero-status-pill';
                 badgeText.innerText = 'BARCHA KOMPYUTERLAR: OCHIQ (ACTIVE)';
             } else {
-                badge.className = 'global-status-badge blocked';
+                badge.className = 'hero-status-pill blocked';
                 badgeText.innerText = 'BARCHA KOMPYUTERLAR: QULFLANGAN (BLOCKED)';
             }
 
@@ -1813,11 +2144,11 @@
 
             if (filteredKeys.length === 0) {
                 grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🖥️</div>
-                        <h3 style="font-size: 16px; margin-bottom: 6px;">Kompyuterlar topilmadi</h3>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">FaceSecurity dasturi ishga tushganda yoki yangi kompyuter qo'shganingizda bu yerda ko'rinadi.</p>
-                        <button class="btn-add-device" style="margin: 0 auto;" onclick="openAddDeviceModal()">➕ Kompyuter Qo'shish</button>
+                    <div class="empty-devices-placeholder">
+                        <div class="icon">🖥️</div>
+                        <h3 style="font-size: 15px; margin-bottom: 4px; font-weight: 700;">Kompyuterlar topilmadi</h3>
+                        <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 14px;">FaceSecurity dasturi ishga tushishi bilan ular ushbu ro'yxatda avtomatik ko'rinadi.</p>
+                        <button class="btn-add-primary" style="margin: 0 auto;" onclick="openAddDeviceModal()">➕ Kompyuter Qo'shish</button>
                     </div>
                 `;
                 return;
@@ -1827,44 +2158,44 @@
                 const d = devices[k];
                 const isBlocked = (d.status === 'BLOCKED' || d.status === 'LOCKED');
                 const card = document.createElement('div');
-                card.className = `device-card ${isBlocked ? 'blocked' : ''}`;
+                card.className = `device-card-item ${isBlocked ? 'blocked' : ''}`;
 
                 const updatedTime = d.updated_at ? new Date(d.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Hozir';
 
                 card.innerHTML = `
-                    <div class="device-card-header">
-                        <div class="device-title">
-                            <div class="device-name">
+                    <div class="card-top-row">
+                        <div class="pc-info-col">
+                            <div class="pc-title-text">
                                 <span>🖥️ ${d.pc_name || k}</span>
                             </div>
-                            <div class="device-school">
+                            <div class="pc-sub-text">
                                 <span>🏫 ${d.school || 'Maktab'}</span> · <span>${d.ver || 'v2.3'}</span>
                             </div>
                         </div>
-                        <div class="status-pill ${isBlocked ? 'blocked' : ''}">
+                        <div class="device-status-chip ${isBlocked ? 'blocked' : ''}">
                             ${isBlocked ? '🔒 Qulflangan' : '✅ Ochiq'}
                         </div>
                     </div>
 
-                    <div class="device-body">
-                        <div class="device-info-row">
-                            <span class="info-label">1-Kod (Hardware ID):</span>
-                            <span class="info-val">${k}</span>
+                    <div class="device-details-box">
+                        <div class="detail-item-row">
+                            <span class="lbl">1-Kod (Hardware ID):</span>
+                            <span class="val-hwid">${k}</span>
                         </div>
-                        <div class="device-info-row">
-                            <span class="info-label">Oxirgi faollik:</span>
-                            <span style="font-size: 12px; color: var(--text-muted);">${updatedTime}</span>
+                        <div class="detail-item-row">
+                            <span class="lbl">Oxirgi faollik:</span>
+                            <span style="font-size: 11px; color: var(--text-dim);">${updatedTime}</span>
                         </div>
                     </div>
 
-                    <div class="device-actions">
-                        <button class="btn-dev btn-dev-toggle" onclick="toggleDeviceStatus('${k}')">
+                    <div class="device-action-buttons">
+                        <button class="btn-card-action btn-toggle-status" onclick="toggleDeviceStatus('${k}')">
                             ${isBlocked ? '🔓 Ochish' : '🔒 Qulflash'}
                         </button>
-                        <button class="btn-dev btn-dev-keygen" onclick="openKeyGenModal('${k}')">
+                        <button class="btn-card-action btn-card-keygen" onclick="openKeyGenModal('${k}')">
                             ⚡ Kalit Olish
                         </button>
-                        <button class="btn-dev btn-dev-delete" onclick="deleteDevice('${k}')">
+                        <button class="btn-card-action btn-delete-ghost" onclick="deleteDevice('${k}')">
                             🗑️ Ro'yxatdan O'chirish
                         </button>
                     </div>
@@ -1907,7 +2238,7 @@
             saveToLocalStorageAndCloud();
             closeModal('addDeviceModal');
             renderDeviceList();
-            showToast(`✅ "${name || hwid}" muvaffaqiyatli qo'shildi!`, "success");
+            showToast(`✅ "${name || hwid}" qo'shildi!`, "success");
         }
 
         function openDevicesJsonModal() {
@@ -1942,7 +2273,7 @@
                     saveToLocalStorageAndCloud();
                     closeModal('devicesJsonModal');
                     renderDeviceList();
-                    showToast("devices.json muvaffaqiyatli saqlandi!", "success");
+                    showToast("devices.json saqlandi!", "success");
                 }
             } catch(e) {
                 showToast("JSON formati noto'g'ri!", "error");
@@ -1956,14 +2287,14 @@
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toastContainer');
             const el = document.createElement('div');
-            el.className = `toast-msg ${type}`;
+            el.className = `toast-bubble ${type}`;
             el.innerHTML = `<span>${type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️')}</span> <span>${msg}</span>`;
             container.appendChild(el);
             setTimeout(() => {
                 el.style.opacity = '0';
-                el.style.transition = 'opacity 0.3s';
-                setTimeout(() => el.remove(), 300);
-            }, 3500);
+                el.style.transition = 'opacity 0.25s';
+                setTimeout(() => el.remove(), 250);
+            }, 3000);
         }
     </script>
 </body>
