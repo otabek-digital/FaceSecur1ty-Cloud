@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         :root {
             --bg-dark: #07090e;
@@ -851,6 +852,12 @@
                 <button class="hdr-btn" onclick="openKeyGenModal('')" style="border-color: rgba(179, 136, 255, 0.4); color: #d8b4fe;">
                     🔑 Kalit Generatori
                 </button>
+                <button class="hdr-btn" onclick="openUsedCodesModal()" style="border-color: rgba(0, 245, 160, 0.4); color: var(--accent-green);">
+                    📜 Ishlatilgan 1-Kodlar (<span id="hdrUsedCodesCount">0</span>)
+                </button>
+                <button class="hdr-btn" onclick="openPinSettingsModal()" style="border-color: rgba(0, 242, 254, 0.4); color: #38bdf8;">
+                    🛡️ PIN Sozlash
+                </button>
                 <button class="hdr-btn" onclick="openExportJsonModal()">
                     💾 GitHub devices.json
                 </button>
@@ -887,6 +894,48 @@
                 </div>
             </div>
 
+            <!-- ⚡ 1-KOD TEZKOR TEKSHIRISH, KALITINI KO'RISH VA MASOFADAN OCHISH MARKAZI -->
+            <div style="background: linear-gradient(135deg, rgba(16, 22, 34, 0.95), rgba(15, 23, 42, 0.95)); border: 1.5px solid var(--border-active); border-radius: 18px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px var(--primary-glow);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">🔑</span>
+                        <div>
+                            <h3 style="font-size: 17px; font-weight: 800; color: #fff; margin: 0;">1-Kod (Hardware ID) Tekshirish, Kalit Olish va Masofadan Ochish</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin: 2px 0 0 0;">Mijoz aytgan 1-kodni kiriting: Kalitni ko'ring, bir martalik holatini tekshiring va masofadan oching.</p>
+                        </div>
+                    </div>
+                    <button class="hdr-btn" onclick="openUsedCodesModal()" style="border-color: rgba(0, 245, 160, 0.4); color: var(--accent-green); font-size: 12px; padding: 6px 14px;">
+                        📜 Ishlatilgan 1-Kodlar Tarixi (<span id="usedCodesCountBadge">0</span>)
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; color: var(--primary);">🖥️ 1-Kod (Hardware ID / Kompyuter Kodi):</label>
+                        <div style="position: relative;">
+                            <input type="text" id="quickHwidInput" class="form-control" style="font-family: var(--font-mono); font-size: 15px; font-weight: bold; color: var(--primary); text-transform: uppercase;" placeholder="Masalan: FS-7A3B-9901" oninput="handleQuickHwidInput()">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 12px; font-weight: 600; color: var(--accent-green);">🔑 Aktivatsiya Kaliti:</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="quickKeyOutput" class="form-control" style="font-family: var(--font-mono); font-size: 13.5px; font-weight: bold; color: var(--accent-green); background: rgba(0,0,0,0.5);" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
+                            <button class="btn-add-device" style="white-space: nowrap; padding: 0 14px; font-size: 12px;" onclick="copyQuickKey()">📋 Nusxa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="quickKeyStatusRow" style="margin-top: 14px; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border-glass);">
+                    <div id="quickStatusBadge" style="font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;"></div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="quickUnlockBtn" class="btn-action btn-unlock-all" style="padding: 10px 18px; font-size: 13px;" onclick="executeQuickUnlock()">
+                            ⚡ Saytdan Masofadan Ochish (Aktivatsiya)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- LIVE AUTO-DISCOVERY STATUS -->
             <div class="live-discovery-banner">
                 <div class="live-discovery-left">
@@ -896,6 +945,25 @@
                 <button class="hdr-btn" onclick="fetchRecentDiscoveredDevices()" style="padding: 4px 12px; font-size: 12px;">
                     📡 Tarmoqni Qidirish
                 </button>
+            </div>
+
+            <!-- ⚡ JONLI FAOLLASHTIRISHNI KUTAYOTGAN QURILMALAR MARKAZI -->
+            <div id="pendingActivationHub" style="margin-bottom: 24px; display: none;">
+                <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.12) 100%); border: 1.5px solid rgba(239, 68, 68, 0.45); border-radius: 16px; padding: 20px; box-shadow: 0 0 25px rgba(239, 68, 68, 0.2);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 24px; animation: pulseGreen 1.5s infinite;">🔔</span>
+                            <div>
+                                <h3 style="font-size: 17px; font-weight: 800; color: #fff; margin: 0;">Faollashtirishni Kutayotgan Kompyuterlar</h3>
+                                <p style="font-size: 12px; color: #cbd5e1; margin: 2px 0 0 0;">Ushbu kompyuterlar Admin rejimiga tushgan. Saytdan to'g'ridan-to'g'ri ochishingiz yoki kalitni aytishingiz mumkin:</p>
+                            </div>
+                        </div>
+                        <span id="pendingCountBadge" style="background: var(--accent-red); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">0 ta</span>
+                    </div>
+                    <div id="pendingCardsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px;">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
             </div>
 
             <!-- CONTROLS & SEARCH -->
@@ -1002,6 +1070,8 @@
                 <button class="btn-add-device" onclick="copyExportJson()">📋 Nusxalash</button>
             </div>
         </div>
+    </div>
+
     <!-- MODAL: OFFLINE ACTIVATION KEY GENERATOR -->
     <div class="modal-overlay" id="keyGenModal">
         <div class="modal-box" style="max-width: 540px;">
@@ -1025,6 +1095,64 @@
             </div>
             <div class="modal-footer">
                 <button class="hdr-btn" onclick="closeModal('keyGenModal')">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ISHLATILGAN 1-KODLAR TARIXI (USED CODES REGISTRY) -->
+    <div class="modal-overlay" id="usedCodesModal">
+        <div class="modal-box" style="max-width: 760px;">
+            <div class="modal-header">
+                <div class="modal-title">📜 Ishlatilgan 1-Kodlar Tarixi (Bir Martalik Jurnal)</div>
+                <button class="modal-close" onclick="closeModal('usedCodesModal')">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                Ushbu 1-kodlar allaqachon faollashtirishda ishlatilgan. Dastur xavfsizlik nuqtai nazaridan bir kodni qayta qabul qilmaydi.
+            </p>
+            <div style="max-height: 320px; overflow-y: auto; margin: 14px 0; border: 1px solid var(--border-glass); border-radius: 12px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+                    <thead>
+                        <tr style="background: rgba(0,0,0,0.4); color: var(--text-muted); border-bottom: 1px solid var(--border-glass);">
+                            <th style="padding: 10px;">1-Kod (Hardware ID)</th>
+                            <th style="padding: 10px;">Kompyuter / Maktab</th>
+                            <th style="padding: 10px;">Berilgan Kalit</th>
+                            <th style="padding: 10px;">Vaqti</th>
+                            <th style="padding: 10px;">Holat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usedCodesTableBody">
+                        <!-- Rendered dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <button class="hdr-btn" style="color: var(--accent-red); border-color: rgba(239,68,68,0.3);" onclick="clearUsedCodesHistory()">🗑️ Tarixni Tozalash</button>
+                <button class="btn-add-device" onclick="closeModal('usedCodesModal')">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PIN SETTINGS -->
+    <div class="modal-overlay" id="pinSettingsModal">
+        <div class="modal-box" style="max-width: 480px;">
+            <div class="modal-header">
+                <div class="modal-title">🛡️ Xavfsizlik PIN Kodini O'zgartirish</div>
+                <button class="modal-close" onclick="closeModal('pinSettingsModal')">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                Ushbu web panelga faqat siz kira olishingiz uchun yangi maxfiy PIN parolingizni o'rnating:
+            </p>
+            <div class="form-group">
+                <label>Yangi Maxfiy PIN Parol (Masalan: 20100111 yoki yangi parol)</label>
+                <input type="password" id="newPinInput" class="form-control" placeholder="Yangi PIN yoki parol">
+            </div>
+            <div class="form-group">
+                <label>Yangi PIN Parolni Qayta Kiriting</label>
+                <input type="password" id="confirmPinInput" class="form-control" placeholder="Qayta kiriting">
+            </div>
+            <div class="modal-footer">
+                <button class="hdr-btn" onclick="closeModal('pinSettingsModal')">Bekor Qilish</button>
+                <button class="btn-add-device" onclick="saveNewPin()">💾 PIN Parolni Saqlash</button>
             </div>
         </div>
     </div>
@@ -1075,13 +1203,41 @@
             const errEl = document.getElementById('pinError');
             if (!input) return;
 
+            // Check brute-force lockout
+            const lockUntil = parseInt(localStorage.getItem('fss_pin_lockout_until') || '0', 10);
+            const now = Date.now();
+            if (lockUntil > now) {
+                const remSec = Math.ceil((lockUntil - now) / 1000);
+                errEl.innerText = `⏳ Tizim bloklangan! Qolgan kutish vaqti: ${remSec} soniya`;
+                errEl.style.display = 'block';
+                return;
+            }
+
             const inputHash = await sha256(input);
-            if (ALLOWED_HASHES.includes(inputHash)) {
+            const customHash = localStorage.getItem('fss_custom_pin_hash');
+            
+            let isAllowed = ALLOWED_HASHES.includes(inputHash);
+            if (customHash && inputHash === customHash) {
+                isAllowed = true;
+            }
+
+            if (isAllowed) {
+                localStorage.removeItem('fss_pin_failed_count');
+                localStorage.removeItem('fss_pin_lockout_until');
                 sessionStorage.setItem('fss_admin_auth', '1');
                 document.getElementById('pinGateOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'flex';
                 initApp();
             } else {
+                let failed = parseInt(localStorage.getItem('fss_pin_failed_count') || '0', 10) + 1;
+                localStorage.setItem('fss_pin_failed_count', failed);
+                
+                if (failed >= 4) {
+                    localStorage.setItem('fss_pin_lockout_until', (now + 15 * 60 * 1000).toString());
+                    errEl.innerText = "🛑 4 marta xato PIN kiritildi! Panel 15 daqiqaga bloklandi.";
+                } else {
+                    errEl.innerText = `Noto'g'ri PIN parol! (Qolgan urinishlar: ${4 - failed} ta)`;
+                }
                 errEl.style.display = 'block';
                 document.getElementById('pinInput').value = '';
                 document.getElementById('pinInput').focus();
@@ -1095,6 +1251,30 @@
         function logout() {
             sessionStorage.removeItem('fss_admin_auth');
             location.reload();
+        }
+
+        function openPinSettingsModal() {
+            document.getElementById('newPinInput').value = '';
+            document.getElementById('confirmPinInput').value = '';
+            document.getElementById('pinSettingsModal').style.display = 'flex';
+            document.getElementById('newPinInput').focus();
+        }
+
+        async function saveNewPin() {
+            const p1 = document.getElementById('newPinInput').value.trim();
+            const p2 = document.getElementById('confirmPinInput').value.trim();
+            if (!p1 || p1.length < 4) {
+                showToast("PIN kamida 4 ta belgidan iborat bo'lishi kerak!", "error");
+                return;
+            }
+            if (p1 !== p2) {
+                showToast("PIN parollar bir xil emas!", "error");
+                return;
+            }
+            const h = await sha256(p1);
+            localStorage.setItem('fss_custom_pin_hash', h);
+            closeModal('pinSettingsModal');
+            showToast("✅ Yangi PIN parol muvaffaqiyatli saqlandi!", "success");
         }
 
         if (sessionStorage.getItem('fss_admin_auth') === '1') {
@@ -1189,7 +1369,7 @@
                 pc_name: info.name || existing.pc_name || hwid,
                 school: (info.school && info.school !== 'Maktab') ? info.school : (existing.school || 'Maktab'),
                 status: info.status || existing.status || 'LOCKED',
-                ver: info.ver || existing.ver || 'v1.3',
+                ver: info.ver || existing.ver || 'v2.3',
                 updated_at: new Date().toISOString()
             };
 
@@ -1324,6 +1504,24 @@
             showToast(`${dev.pc_name || hwid}: ${newStatus === 'ACTIVE' ? 'OCHILDI (ACTIVE)' : 'QULFLANDI (BLOCKED)'}!`, newStatus === 'ACTIVE' ? 'success' : 'error');
         }
 
+        function toggleDeviceStatus(hwid) {
+            const dev = cloudDatabase.devices[hwid];
+            if (!dev) return;
+
+            const newStatus = (dev.status === 'ACTIVE') ? 'BLOCKED' : 'ACTIVE';
+            dev.status = newStatus;
+            dev.updated_at = new Date().toISOString();
+
+            if (newStatus === 'ACTIVE') {
+                markCodeAsUsed(hwid, "REMOTE_UNLOCK");
+            }
+
+            saveToLocalStorage();
+            broadcastRemoteCommand(hwid, newStatus === 'ACTIVE' ? 'UNLOCK' : 'LOCK');
+            renderDeviceList();
+            showToast(`${dev.pc_name || hwid}: ${newStatus === 'ACTIVE' ? 'OCHILDI (ACTIVE) & 1-Kod ishlatildi!' : 'QULFLANDI (BLOCKED)'}!`, newStatus === 'ACTIVE' ? 'success' : 'error');
+        }
+
         function deleteDevice(hwid) {
             if (confirm(`"${cloudDatabase.devices[hwid]?.pc_name || hwid}" kompyuterini ro'yxatdan o'chirishni xohlaysizmi?`)) {
                 delete cloudDatabase.devices[hwid];
@@ -1385,9 +1583,196 @@
         }
 
         // ==========================================
-        // 6. RENDERING & UI UPDATES
+        // 6. SINGLE-USE 1-KOD & USED CODES REGISTRY
+        // ==========================================
+        function markCodeAsUsed(hwid, method = 'REMOTE_UNLOCK') {
+            const clean = cleanMachineCode(hwid);
+            if (!clean) return;
+            const fullCode = hwid.startsWith('FS-') ? hwid : `FS-${hwid}`;
+            const key = generateRemoteActivationKeySync(fullCode);
+            const dev = cloudDatabase.devices[fullCode] || cloudDatabase.devices[clean] || {};
+
+            if (!cloudDatabase.used_codes || typeof cloudDatabase.used_codes !== 'object') {
+                cloudDatabase.used_codes = {};
+            }
+
+            cloudDatabase.used_codes[fullCode] = {
+                code: fullCode,
+                clean_code: clean,
+                key: key,
+                used_at: new Date().toISOString(),
+                method: method,
+                pc_name: dev.pc_name || fullCode,
+                school: dev.school || 'Umumiy Maktab'
+            };
+
+            saveToLocalStorage();
+            updateUsedCodesCountUI();
+        }
+
+        function isCodeUsed(hwid) {
+            if (!cloudDatabase.used_codes) return false;
+            const clean = cleanMachineCode(hwid);
+            const fullCode = hwid.startsWith('FS-') ? hwid : `FS-${hwid}`;
+            return !!(cloudDatabase.used_codes[fullCode] || cloudDatabase.used_codes[clean]);
+        }
+
+        function getUsedCodeInfo(hwid) {
+            if (!cloudDatabase.used_codes) return null;
+            const clean = cleanMachineCode(hwid);
+            const fullCode = hwid.startsWith('FS-') ? hwid : `FS-${hwid}`;
+            return cloudDatabase.used_codes[fullCode] || cloudDatabase.used_codes[clean] || null;
+        }
+
+        function updateUsedCodesCountUI() {
+            const count = Object.keys(cloudDatabase.used_codes || {}).length;
+            const b1 = document.getElementById('usedCodesCountBadge');
+            const b2 = document.getElementById('hdrUsedCodesCount');
+            if (b1) b1.innerText = count.toString();
+            if (b2) b2.innerText = count.toString();
+        }
+
+        function openUsedCodesModal() {
+            renderUsedCodesTable();
+            document.getElementById('usedCodesModal').style.display = 'flex';
+        }
+
+        function renderUsedCodesTable() {
+            const tbody = document.getElementById('usedCodesTableBody');
+            const entries = Object.values(cloudDatabase.used_codes || {});
+            
+            if (entries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">Hozircha ishlatilgan 1-kodlar yo'q. Faollashtirilgan barcha kodlar bu yerda bir martalik ro'yxatga olinadi.</td></tr>`;
+                return;
+            }
+
+            // Sort newest first
+            entries.sort((a, b) => new Date(b.used_at || 0) - new Date(a.used_at || 0));
+
+            let html = '';
+            entries.forEach(item => {
+                const dateStr = item.used_at ? new Date(item.used_at).toLocaleString() : 'Noma\'lum';
+                const methodLabel = item.method === 'REMOTE_UNLOCK' ? '⚡ Saytdan Ochish' : '📋 Kalit Nusxalandi';
+                html += `
+                    <tr style="border-bottom: 1px solid var(--border-glass);">
+                        <td style="padding: 10px; font-family: var(--font-mono); font-weight: bold; color: var(--primary);">${escapeHtml(item.code || '')}</td>
+                        <td style="padding: 10px; color: #fff;">${escapeHtml(item.pc_name || '')} <span style="font-size: 11px; color: var(--text-muted);">(${escapeHtml(item.school || '')})</span></td>
+                        <td style="padding: 10px; font-family: var(--font-mono); color: var(--accent-green); font-size: 11.5px;">${escapeHtml(item.key || '')}</td>
+                        <td style="padding: 10px; color: var(--text-muted); font-size: 11.5px;">${escapeHtml(dateStr)}</td>
+                        <td style="padding: 10px;">
+                            <span style="background: rgba(239,68,68,0.15); color: var(--accent-red); border: 1px solid var(--accent-red); padding: 2px 8px; border-radius: 6px; font-size: 10.5px; font-weight: bold;">🔒 ISHLATILGAN</span>
+                            <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(methodLabel)}</div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function clearUsedCodesHistory() {
+            if (confirm("Haqiqatan ham ishlatilgan 1-kodlar tarixini tozalamoqchimisiz?")) {
+                cloudDatabase.used_codes = {};
+                saveToLocalStorage();
+                renderUsedCodesTable();
+                updateUsedCodesCountUI();
+                renderDeviceList();
+                showToast("1-kodlar tarixi tozalandi!", "info");
+            }
+        }
+
+        // ==========================================
+        // 7. QUICK 1-KOD ACTIVATION & REMOTE UNLOCK HANDLERS
+        // ==========================================
+        function handleQuickHwidInput() {
+            const raw = document.getElementById('quickHwidInput').value.trim();
+            const outEl = document.getElementById('quickKeyOutput');
+            const statusRow = document.getElementById('quickKeyStatusRow');
+            const badge = document.getElementById('quickStatusBadge');
+            const unlockBtn = document.getElementById('quickUnlockBtn');
+
+            if (!raw) {
+                outEl.value = '';
+                statusRow.style.display = 'none';
+                return;
+            }
+
+            const clean = cleanMachineCode(raw);
+            const fullHwid = raw.startsWith('FS-') ? raw.toUpperCase() : `FS-${raw.toUpperCase()}`;
+            const key = generateRemoteActivationKeySync(fullHwid);
+            outEl.value = key;
+
+            const used = isCodeUsed(fullHwid);
+            statusRow.style.display = 'flex';
+
+            if (used) {
+                const info = getUsedCodeInfo(fullHwid);
+                const usedTime = info?.used_at ? new Date(info.used_at).toLocaleTimeString() : '';
+                badge.innerHTML = `<span style="color: var(--accent-red); background: rgba(239,68,68,0.15); border: 1px solid var(--accent-red); padding: 4px 10px; border-radius: 8px;">🔒 ISHLATILGAN (Bir martalik kod sarflangan - ${usedTime})</span>`;
+                unlockBtn.style.background = 'linear-gradient(135deg, #475569, #334155)';
+                unlockBtn.innerText = "⚠️ Ushbu 1-kod allaqachon ishlatilgan";
+            } else {
+                badge.innerHTML = `<span style="color: var(--accent-green); background: rgba(0,245,160,0.12); border: 1px solid var(--accent-green); padding: 4px 10px; border-radius: 8px;">🟢 YANGI KOD (Bir martalik foydalanish mumkin)</span>`;
+                unlockBtn.style.background = 'linear-gradient(135deg, #00b09b, #96c93d)';
+                unlockBtn.innerText = "⚡ Saytdan Masofadan Ochish (Aktivatsiya)";
+            }
+        }
+
+        function copyQuickKey() {
+            const k = document.getElementById('quickKeyOutput').value;
+            const raw = document.getElementById('quickHwidInput').value.trim();
+            if (!k || !raw) {
+                showToast("Avval 1-Kodni (Hardware ID) kiriting!", "error");
+                return;
+            }
+            navigator.clipboard.writeText(k).then(() => {
+                const fullHwid = raw.startsWith('FS-') ? raw.toUpperCase() : `FS-${raw.toUpperCase()}`;
+                markCodeAsUsed(fullHwid, 'KEY_COPY');
+                handleQuickHwidInput();
+                renderDeviceList();
+                showToast("Aktivatsiya kaliti nusxalandi va 1-kod bir martalik sarflandi!", "success");
+            });
+        }
+
+        function executeQuickUnlock() {
+            const raw = document.getElementById('quickHwidInput').value.trim();
+            if (!raw) {
+                showToast("Avval 1-Kodni (Hardware ID) kiriting!", "error");
+                return;
+            }
+
+            const fullHwid = raw.startsWith('FS-') ? raw.toUpperCase() : `FS-${raw.toUpperCase()}`;
+            
+            if (isCodeUsed(fullHwid)) {
+                if (!confirm("⚠️ Ushbu 1-kod allaqachon bir marta ishlatilgan! Shunda ham qayta ochish buyrug'ini yubormoqchimisiz?")) {
+                    return;
+                }
+            }
+
+            if (!cloudDatabase.devices[fullHwid]) {
+                cloudDatabase.devices[fullHwid] = {
+                    pc_name: fullHwid,
+                    school: 'Tezkor Faollashtirilgan',
+                    status: 'ACTIVE',
+                    updated_at: new Date().toISOString()
+                };
+            } else {
+                cloudDatabase.devices[fullHwid].status = 'ACTIVE';
+                cloudDatabase.devices[fullHwid].updated_at = new Date().toISOString();
+            }
+
+            markCodeAsUsed(fullHwid, 'REMOTE_UNLOCK');
+            saveToLocalStorage();
+            broadcastRemoteCommand(fullHwid, 'UNLOCK');
+            handleQuickHwidInput();
+            renderDeviceList();
+            showToast(`⚡ ${fullHwid} masofadan ochildi va 1-kod ishlatildi!`, "success");
+        }
+
+        // ==========================================
+        // 8. RENDERING & UI UPDATES
         // ==========================================
         function renderDeviceList() {
+            updateUsedCodesCountUI();
             const grid = document.getElementById('devicesGrid');
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             
@@ -1408,10 +1793,56 @@
             let blockedCount = 0;
 
             let html = '';
+            let pendingHtml = '';
+            let pendingCount = 0;
+
             keys.forEach(hwid => {
                 const d = cloudDatabase.devices[hwid];
                 const isActive = d.status === 'ACTIVE';
                 if (isActive) activeCount++; else blockedCount++;
+
+                const actKey = generateRemoteActivationKeySync(hwid);
+                const codeUsed = isCodeUsed(hwid);
+
+                if (!isActive) {
+                    pendingCount++;
+                    pendingHtml += `
+                        <div style="background: rgba(10, 15, 26, 0.85); border: 1.5px solid var(--accent-red); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <span style="font-weight: bold; font-size: 14px; color: #fff;">💻 ${escapeHtml(d.pc_name || hwid)}</span>
+                                    <span style="background: rgba(239,68,68,0.2); color: var(--accent-red); border: 1px solid var(--accent-red); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">■ QULFLANGAN</span>
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">🏫 ${escapeHtml(d.school || 'Maktab')}</div>
+                                
+                                <div style="background: rgba(0,0,0,0.5); padding: 8px 10px; border-radius: 8px; border: 1px dashed rgba(0,242,254,0.3); margin-bottom: 8px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                        <span style="font-size: 11px; color: var(--text-muted);">🖥️ 1-Kod (Hardware ID):</span>
+                                        ${codeUsed 
+                                            ? '<span style="font-size: 10px; color: var(--accent-red); font-weight: bold;">🔒 ISHLATILGAN</span>' 
+                                            : '<span style="font-size: 10px; color: var(--accent-green); font-weight: bold;">🟢 YANGI BIR MARTALIK</span>'}
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <b style="color: var(--primary); font-family: var(--font-mono); font-size: 14px;">${escapeHtml(hwid)}</b>
+                                        <button onclick="navigator.clipboard.writeText('${escapeHtml(hwid)}'); showToast('1-Kod nusxalandi: ${escapeHtml(hwid)}', 'success');" style="background: rgba(0,242,254,0.15); border: 1px solid var(--border-active); color: var(--primary); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer;">📋 Nusxa</button>
+                                    </div>
+                                </div>
+
+                                <div style="background: rgba(0,245,160,0.08); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(0,245,160,0.3);">
+                                    <div style="font-size: 11px; color: var(--accent-green); font-weight: 600; margin-bottom: 2px;">🔑 Faollashtirish Kaliti (Mijozga aytish uchun):</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <b style="color: var(--accent-green); font-family: var(--font-mono); font-size: 13px;">${escapeHtml(actKey)}</b>
+                                        <button onclick="navigator.clipboard.writeText('${escapeHtml(actKey)}'); markCodeAsUsed('${escapeHtml(hwid)}', 'KEY_COPY'); renderDeviceList(); showToast('Aktivatsiya kaliti nusxalandi va 1-kod ishlatildi!', 'success');" style="background: rgba(0,245,160,0.2); border: 1px solid var(--accent-green); color: var(--accent-green); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">📋 Nusxa</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="toggleDeviceStatus('${escapeHtml(hwid)}')" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #10B981, #059669); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16,185,129,0.35);">
+                                ⚡ Saytdan To'g'ridan-To'g'ri Ochish (Masofaviy Aktivatsiya)
+                            </button>
+                        </div>
+                    `;
+                }
 
                 const sText = `${hwid} ${d.pc_name || ''} ${d.school || ''} ${d.status || ''}`.toLowerCase();
                 if (search && !sText.includes(search)) return;
@@ -1434,12 +1865,22 @@
 
                         <div class="device-body">
                             <div class="device-info-row">
-                                <span class="info-label">Hardware ID:</span>
-                                <span class="info-val">${escapeHtml(hwid)}</span>
+                                <span class="info-label">🖥️ 1-Kod (HWID):</span>
+                                <span class="info-val" style="font-family: var(--font-mono); font-weight: bold; color: var(--primary);">${escapeHtml(hwid)} <button onclick="navigator.clipboard.writeText('${escapeHtml(hwid)}'); showToast('Nusxalandi: ${escapeHtml(hwid)}', 'success');" style="background: transparent; border:none; color: var(--primary); cursor:pointer;" title="Nusxalash">📋</button></span>
+                            </div>
+                            <div class="device-info-row" style="background: rgba(0, 245, 160, 0.08); padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(0, 245, 160, 0.25); margin: 6px 0;">
+                                <span class="info-label" style="color: var(--accent-green); font-weight: 600;">🔑 Kalit:</span>
+                                <span class="info-val" style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-green); font-size: 12.5px;">${escapeHtml(actKey)} <button onclick="navigator.clipboard.writeText('${escapeHtml(actKey)}'); markCodeAsUsed('${escapeHtml(hwid)}', 'KEY_COPY'); renderDeviceList(); showToast('Aktivatsiya kaliti nusxalandi!', 'success');" style="background: rgba(0,245,160,0.2); border: 1px solid rgba(0,245,160,0.4); border-radius: 4px; padding: 2px 6px; color: var(--accent-green); cursor:pointer; font-size: 11px;" title="Nusxalash">📋 Nusxa</button></span>
+                            </div>
+                            <div class="device-info-row">
+                                <span class="info-label">1-Kod Holati:</span>
+                                <span class="info-val" style="font-size: 11.5px; font-weight: bold; color: ${codeUsed ? 'var(--accent-red)' : 'var(--accent-green)'};">
+                                    ${codeUsed ? '🔒 Ishlatilgan (Bir martalik)' : '🟢 Yangi (Foydalanilmagan)'}
+                                </span>
                             </div>
                             <div class="device-info-row">
                                 <span class="info-label">Holati:</span>
-                                <span class="info-val" style="color: ${isActive ? 'var(--accent-green)' : 'var(--accent-red)'};">${isActive ? 'ACTIVE (Ishlaydi)' : 'BLOCKED (Qulflangan)'}</span>
+                                <span class="info-val" style="color: ${isActive ? 'var(--accent-green)' : 'var(--accent-red)'}; font-weight: bold;">${isActive ? 'ACTIVE (Ishlaydi)' : 'BLOCKED (Qulflangan)'}</span>
                             </div>
                             <div class="device-info-row">
                                 <span class="info-label">Oxirgi faollik:</span>
@@ -1448,8 +1889,8 @@
                         </div>
 
                         <div class="device-actions">
-                            <button class="dev-btn ${isActive ? 'dev-btn-lock' : 'dev-btn-unlock'}" onclick="toggleDeviceStatus('${escapeHtml(hwid)}')">
-                                ${isActive ? '🔒 Qulflash' : '🔓 Ochish'}
+                            <button class="dev-btn ${isActive ? 'dev-btn-lock' : 'dev-btn-unlock'}" style="${!isActive ? 'background: linear-gradient(135deg, #10B981, #059669); color: #fff; font-weight: bold;' : ''}" onclick="toggleDeviceStatus('${escapeHtml(hwid)}')">
+                                ${isActive ? '🔒 Qulflash' : '⚡ Saytdan Ochish'}
                             </button>
                             <button class="dev-btn dev-btn-auth" onclick="openAuthModal('${escapeHtml(hwid)}')">
                                 🔑 Login/Parol
@@ -1468,6 +1909,16 @@
                 `;
             });
 
+            // Update Pending Hub
+            const pendingHub = document.getElementById('pendingActivationHub');
+            if (pendingCount > 0) {
+                pendingHub.style.display = 'block';
+                document.getElementById('pendingCountBadge').innerText = `${pendingCount} ta so'rov`;
+                document.getElementById('pendingCardsContainer').innerHTML = pendingHtml;
+            } else {
+                pendingHub.style.display = 'none';
+            }
+
             if (!html) {
                 html = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px;">
@@ -1484,7 +1935,7 @@
         }
 
         // ==========================================
-        // 7. ADD / EDIT DEVICE MODAL
+        // 9. ADD / EDIT DEVICE MODAL
         // ==========================================
         let editingHwid = null;
 
@@ -1541,17 +1992,18 @@
         }
 
         // ==========================================
-        // 8. JSON EXPORT & COPY (1M+ SCALABILITY)
+        // 10. JSON EXPORT & COPY (1M+ SCALABILITY)
         // ==========================================
         function openExportJsonModal() {
             const fullDb = {
-                version: "1.3",
+                version: "2.3",
                 updated_at: new Date().toISOString(),
                 description: "FaceSecurity School Universal Cloud Hub (1,000,000+ Scale Architecture) - otabek-digital",
                 master_auth: cloudDatabase.master_auth || { username: "admin", password: "admin" },
                 global: cloudDatabase.global || { status: "ACTIVE", note: "Barcha maktablar va 1,000,000+ kompyuterlarni global boshqarish siyosati" },
                 blacklist: cloudDatabase.blacklist || [],
-                devices: cloudDatabase.devices || {}
+                devices: cloudDatabase.devices || {},
+                used_codes: cloudDatabase.used_codes || {}
             };
             const text = JSON.stringify(fullDb, null, 2);
             document.getElementById('exportJsonText').value = text;
@@ -1567,7 +2019,7 @@
         }
 
         // ==========================================
-        // 9. OFFLINE ACTIVATION KEY GENERATOR
+        // 11. OFFLINE ACTIVATION KEY GENERATOR
         // ==========================================
         function cleanMachineCode(code) {
             if (!code) return "";
@@ -1578,7 +2030,24 @@
             return c;
         }
 
+        function generateRemoteActivationKeySync(machineCode) {
+            let clean = cleanMachineCode(machineCode);
+            if (!clean) return "";
+            if (clean.length < 8) clean = clean.padEnd(8, '0');
+            const shortCode = clean.substring(0, 8);
+            
+            if (window.CryptoJS && CryptoJS.HmacSHA256) {
+                const hmac = CryptoJS.HmacSHA256(shortCode + "_ACTIVATED", MASTER_SECRET_SALT);
+                const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
+                return `FS-ACT-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
+            }
+            return "";
+        }
+
         async function generateRemoteActivationKey(machineCode) {
+            let syncKey = generateRemoteActivationKeySync(machineCode);
+            if (syncKey) return syncKey;
+
             let clean = cleanMachineCode(machineCode);
             if (!clean) return "";
             if (clean.length < 8) clean = clean.padEnd(8, '0');
@@ -1590,31 +2059,43 @@
             return `FS-ACT-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
         }
 
-        async function openKeyGenModal(prefillHwid = '') {
+        function openKeyGenModal(prefillHwid = '') {
             document.getElementById('keyGenHwid').value = prefillHwid || '';
             document.getElementById('keyGenModal').style.display = 'flex';
-            await calculateKeyGen();
+            calculateKeyGen();
             if (!prefillHwid) document.getElementById('keyGenHwid').focus();
         }
 
-        async function calculateKeyGen() {
-            const hwid = document.getElementById('keyGenHwid').value.trim();
-            if (!hwid) {
+        function calculateKeyGen() {
+            const raw = document.getElementById('keyGenHwid').value.trim();
+            if (!raw) {
                 document.getElementById('generatedKeyResult').value = '';
                 return;
             }
-            const key = await generateRemoteActivationKey(hwid);
-            document.getElementById('generatedKeyResult').value = key;
+            let key = generateRemoteActivationKeySync(raw);
+            if (key) {
+                document.getElementById('generatedKeyResult').value = key;
+            } else {
+                generateRemoteActivationKey(raw).then(k => {
+                    document.getElementById('generatedKeyResult').value = k;
+                });
+            }
         }
 
         function copyGeneratedKey() {
             const k = document.getElementById('generatedKeyResult').value;
+            const raw = document.getElementById('keyGenHwid').value.trim();
             if (!k) {
                 showToast("Avval Hardware ID kiriting!", "error");
                 return;
             }
             navigator.clipboard.writeText(k).then(() => {
-                showToast("Aktivatsiya kaliti nusxalandi!", "success");
+                if (raw) {
+                    const fullHwid = raw.startsWith('FS-') ? raw.toUpperCase() : `FS-${raw.toUpperCase()}`;
+                    markCodeAsUsed(fullHwid, 'KEY_COPY');
+                    renderDeviceList();
+                }
+                showToast("Aktivatsiya kaliti nusxalandi va 1-kod sarflandi!", "success");
             });
         }
 

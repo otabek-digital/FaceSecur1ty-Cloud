@@ -1,6 +1,6 @@
-﻿# FaceSecurity Universal Cloud Management (otabek-digital)
+# FaceSecurity Universal Cloud Management (otabek-digital)
 
-Ushbu markaziy bulut serveri **FaceSecurity School v1.3** dasturi o'rnatilgan **barcha maktablar** va barcha kompyuterlarni masofadan nazorat qilish, ochish, qulflash va litsenziyalash uchun xizmat qiladi.
+Ushbu markaziy bulut serveri **FaceSecurity School v2.3** dasturi o'rnatilgan **barcha maktablar** va barcha kompyuterlarni masofadan nazorat qilish, ochish, qulflash va litsenziyalash uchun xizmat qiladi.
 
 ## 📱 Masofadan Boshqarish Qoidalari:
 
