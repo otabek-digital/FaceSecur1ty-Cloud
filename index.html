@@ -810,13 +810,99 @@
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 245, 160, 0); }
         }
 
-        /* RESPONSIVE */
+        /* RESPONSIVE DESIGN (MOBILE & SMARTPHONE ADAPTIVE) */
+        @media (max-width: 900px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding: 14px 16px;
+            }
+            .header-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .hdr-btn {
+                font-size: 11.5px;
+                padding: 6px 10px;
+                flex: 1 1 calc(50% - 8px);
+                min-width: 130px;
+                justify-content: center;
+            }
+        }
+
         @media (max-width: 768px) {
-            header { padding: 12px 16px; }
-            main { padding: 16px; }
-            .global-actions-grid { grid-template-columns: 1fr; }
-            .devices-grid { grid-template-columns: 1fr; }
-            .device-actions { grid-template-columns: 1fr 1fr; }
+            body {
+                padding: 0;
+            }
+            main {
+                padding: 12px 10px;
+            }
+            .banner-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .global-actions-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .btn-action {
+                font-size: 13px;
+                padding: 12px 14px;
+            }
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .search-box {
+                max-width: 100%;
+                width: 100%;
+            }
+            .quick-stats {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .stat-badge {
+                flex: 1 1 30%;
+                text-align: center;
+                font-size: 11px;
+                padding: 6px 8px;
+            }
+            .btn-add-device {
+                width: 100%;
+                padding: 12px;
+            }
+            .devices-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .device-actions {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .dev-btn {
+                font-size: 11.5px;
+                padding: 9px 6px;
+            }
+            .pin-box {
+                padding: 28px 18px;
+                max-width: 95%;
+            }
+            .pin-input {
+                font-size: 18px;
+                letter-spacing: 4px;
+                padding: 14px;
+            }
+            .modal-box {
+                padding: 20px 14px;
+                max-width: 95%;
+                margin: 8px;
+            }
         }
     </style>
 </head>
@@ -881,15 +967,12 @@
                         <span class="live-dot"></span> BARCHA KOMPYUTERLAR: OCHIQ (ACTIVE)
                     </div>
                 </div>
-                <div class="global-actions-grid">
+                <div class="global-actions-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
                     <button class="btn-action btn-unlock-all" onclick="setGlobalStatus('ACTIVE')">
                         🔓 Barcha Maktablarni Ochish
                     </button>
                     <button class="btn-action btn-lock-all" onclick="setGlobalStatus('BLOCKED')">
                         🔒 Barcha Maktablarni Qulflash (Admin Rejimi)
-                    </button>
-                    <button class="btn-action btn-auth-all" onclick="openAuthModal('GLOBAL')">
-                        🔑 Barcha Dasturlarda Login & Parolni O'zgartirish
                     </button>
                 </div>
             </div>
@@ -1022,37 +1105,6 @@
         </div>
     </div>
 
-    <!-- MODAL: CHANGE MASTER AUTH (LOGIN & PASSWORD) -->
-    <div class="modal-overlay" id="authModal">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-title" id="authModalTitle">🔑 Admin Login & Parolini O'zgartirish</div>
-                <button class="modal-close" onclick="closeModal('authModal')">&times;</button>
-            </div>
-            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                O'zgartirilgan login va parol dasturning <b>Admin rejimi</b> va <b>Sozlamalar (Setup)</b> oynasiga avtomatik tatbiq etiladi!
-            </p>
-            <input type="hidden" id="authTargetHwid" value="GLOBAL">
-            <div class="form-group">
-                <label>Amal Qilish Doirasi</label>
-                <input type="text" id="authTargetName" class="form-control" readonly value="Barcha Maktablar va Kompyuterlar (GLOBAL)" style="background: rgba(0,0,0,0.4);">
-            </div>
-            <div class="form-group">
-                <label>Yangi Admin Login (Username)</label>
-                <input type="text" id="newMasterUser" class="form-control" placeholder="admin" value="admin">
-            </div>
-            <div class="form-group">
-                <label>Yangi Admin Parol (Password / Setup Password)</label>
-                <input type="text" id="newMasterPass" class="form-control" placeholder="Yangi parolni kiriting...">
-            </div>
-            <div class="modal-footer">
-                <button class="hdr-btn" onclick="closeModal('authModal')">Bekor Qilish</button>
-                <button class="btn-action btn-auth-all" style="padding: 10px 20px; font-size: 14px;" onclick="submitAuthChange()">
-                    🚀 Login & Parolni Yangilash
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- MODAL: GITHUB JSON EXPORT -->
     <div class="modal-overlay" id="exportModal">
@@ -1531,56 +1583,6 @@
             }
         }
 
-        // ==========================================
-        // 5. MASTER AUTH (LOGIN & PASSWORD) MANAGEMENT
-        // ==========================================
-        function openAuthModal(targetHwid) {
-            document.getElementById('authTargetHwid').value = targetHwid;
-            if (targetHwid === 'GLOBAL') {
-                document.getElementById('authTargetName').value = "Barcha Maktablar va Kompyuterlar (GLOBAL)";
-                document.getElementById('newMasterUser').value = cloudDatabase.master_auth?.username || "admin";
-            } else {
-                const dev = cloudDatabase.devices[targetHwid];
-                document.getElementById('authTargetName').value = `${dev?.pc_name || targetHwid} (${dev?.school || ''})`;
-                document.getElementById('newMasterUser').value = dev?.admin_username || cloudDatabase.master_auth?.username || "admin";
-            }
-            document.getElementById('newMasterPass').value = '';
-            document.getElementById('authModal').style.display = 'flex';
-            document.getElementById('newMasterPass').focus();
-        }
-
-        async function submitAuthChange() {
-            const targetHwid = document.getElementById('authTargetHwid').value;
-            const newU = document.getElementById('newMasterUser').value.trim();
-            const newP = document.getElementById('newMasterPass').value.trim();
-
-            if (!newU || !newP) {
-                showToast("Login va Parolni to'liq kiriting!", "error");
-                return;
-            }
-
-            if (targetHwid === 'GLOBAL') {
-                cloudDatabase.master_auth = {
-                    username: newU,
-                    password: newP,
-                    updated_at: new Date().toISOString()
-                };
-                broadcastRemoteCommand('GLOBAL', `SET_AUTH:${newU}:${newP}`);
-                showToast("Barcha dasturlar uchun yangi Master Login & Parol o'rnatildi!", "success");
-            } else {
-                if (cloudDatabase.devices[targetHwid]) {
-                    cloudDatabase.devices[targetHwid].admin_username = newU;
-                    cloudDatabase.devices[targetHwid].admin_password = newP;
-                    cloudDatabase.devices[targetHwid].updated_at = new Date().toISOString();
-                }
-                broadcastRemoteCommand(targetHwid, `SET_AUTH:${newU}:${newP}`);
-                showToast(`${targetHwid} uchun Login & Parol yangilandi!`, "success");
-            }
-
-            saveToLocalStorage();
-            closeModal('authModal');
-            renderDeviceList();
-        }
 
         // ==========================================
         // 6. SINGLE-USE 1-KOD & USED CODES REGISTRY
@@ -1892,9 +1894,6 @@
                             <button class="dev-btn ${isActive ? 'dev-btn-lock' : 'dev-btn-unlock'}" style="${!isActive ? 'background: linear-gradient(135deg, #10B981, #059669); color: #fff; font-weight: bold;' : ''}" onclick="toggleDeviceStatus('${escapeHtml(hwid)}')">
                                 ${isActive ? '🔒 Qulflash' : '⚡ Saytdan Ochish'}
                             </button>
-                            <button class="dev-btn dev-btn-auth" onclick="openAuthModal('${escapeHtml(hwid)}')">
-                                🔑 Login/Parol
-                            </button>
                             <button class="dev-btn" style="background: rgba(179, 136, 255, 0.15); border-color: rgba(179, 136, 255, 0.3); color: #d8b4fe;" onclick="openKeyGenModal('${escapeHtml(hwid)}')">
                                 🗝️ Kalit
                             </button>
@@ -1999,7 +1998,6 @@
                 version: "2.3",
                 updated_at: new Date().toISOString(),
                 description: "FaceSecurity School Universal Cloud Hub (1,000,000+ Scale Architecture) - otabek-digital",
-                master_auth: cloudDatabase.master_auth || { username: "admin", password: "admin" },
                 global: cloudDatabase.global || { status: "ACTIVE", note: "Barcha maktablar va 1,000,000+ kompyuterlarni global boshqarish siyosati" },
                 blacklist: cloudDatabase.blacklist || [],
                 devices: cloudDatabase.devices || {},
