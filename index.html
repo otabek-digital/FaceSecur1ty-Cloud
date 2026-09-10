@@ -925,6 +925,33 @@
             border-color: rgba(244, 63, 94, 0.3);
         }
 
+        .device-status-chip.attack {
+            background: rgba(239, 68, 68, 0.25);
+            color: #ff4d4d;
+            border-color: #ef4444;
+            animation: pulseAttack 1s infinite alternate;
+        }
+
+        @keyframes pulseAttack {
+            from { box-shadow: 0 0 4px rgba(239, 68, 68, 0.4); }
+            to { box-shadow: 0 0 12px rgba(239, 68, 68, 0.9); }
+        }
+
+        .device-status-chip.expired {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border-color: rgba(245, 158, 11, 0.6);
+        }
+
+        .device-card-item.attack::before {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+        }
+
+        .device-card-item.expired::before {
+            background: #f59e0b;
+        }
+
         .device-details-box {
             background: rgba(0, 0, 0, 0.35);
             border-radius: var(--radius-sm);
@@ -1864,7 +1891,7 @@
         }
 
         async function registerDiscoveredDevice(info) {
-            if (!info || (!info.code && !info.clean)) return;
+            if (!info || (!info.code && !info.clean && !info.clean_base)) return;
             const code = info.code || info.clean;
             if (code === 'FS-GLOBAL' || code === 'GLOBAL') return;
 
@@ -1873,23 +1900,26 @@
             const schoolName = (info.school && info.school !== 'Maktab') ? info.school : 'Maktab';
             const status = info.status || 'LOCKED';
             const ver = info.ver || 'v2.3';
-            const ts = info.ts;
-
-            if (info.sig && ts) {
-                const ms = _getMS();
-                const fullCode = info.code || (`FS-${clean}`);
-                const rawSig = `${fullCode}|${clean}|${compName}|${schoolName}|${status}|${ver}|${ts}`;
-                const expectedSig = await hmacSha256(ms, rawSig);
-                if (info.sig.toUpperCase() !== expectedSig.toUpperCase()) {
-                    return;
-                }
-            } else if (!info.manuallyAdded) {
-                return;
-            }
 
             const hwid = code.startsWith('FS-') ? code : `FS-${code}`;
-            const isNew = !cloudDatabase.devices[hwid];
-            const existing = cloudDatabase.devices[hwid] || {};
+            const cleanBase = clean.substring(0, 8);
+
+            // Match if existing device has the same base hardware ID (first 8 chars)
+            let matchedKey = null;
+            for (const k in cloudDatabase.devices) {
+                const existingClean = cleanMachineCode(k);
+                if (existingClean.substring(0, 8) === cleanBase) {
+                    matchedKey = k;
+                    break;
+                }
+            }
+
+            const isNew = !matchedKey && !cloudDatabase.devices[hwid];
+            const existing = matchedKey ? (cloudDatabase.devices[matchedKey] || {}) : (cloudDatabase.devices[hwid] || {});
+
+            if (matchedKey && matchedKey !== hwid) {
+                delete cloudDatabase.devices[matchedKey];
+            }
 
             cloudDatabase.devices[hwid] = {
                 ...existing,
@@ -1911,6 +1941,7 @@
         async function startRealtimeDeviceDiscovery() {
             try {
                 const secReg = await getSecureRegistryChannel();
+                // 1. Primary secure SSE
                 const sse1 = new EventSource(`https://ntfy.sh/${secReg}/sse`);
                 sse1.onmessage = async (e) => {
                     try {
@@ -1921,30 +1952,81 @@
                         }
                     } catch(err) {}
                 };
+
+                // 2. Backup general registry SSE
+                const sse2 = new EventSource(`https://ntfy.sh/fss_registry_v23/sse`);
+                sse2.onmessage = async (e) => {
+                    try {
+                        const msgData = JSON.parse(e.data);
+                        if (msgData && msgData.message) {
+                            const parsed = JSON.parse(msgData.message);
+                            await registerDiscoveredDevice(parsed);
+                        }
+                    } catch(err) {}
+                };
+
+                // 3. Periodic fast dweet & ntfy poller (every 3 seconds)
+                setInterval(async () => {
+                    try {
+                        const r1 = await fetch(`https://dweet.cc/get/latest/dweet/for/fss_registry_v23?_=${Date.now()}`);
+                        if (r1.ok) {
+                            const j1 = await r1.json();
+                            if (j1 && j1.with && j1.with.length > 0) {
+                                const c = j1.with[0].content;
+                                if (c && (c.code || c.clean)) {
+                                    await registerDiscoveredDevice(c);
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }, 3000);
             } catch(e) {}
         }
 
         async function fetchRecentDiscoveredDevices() {
             try {
                 const secReg = await getSecureRegistryChannel();
-                const u = `https://ntfy.sh/${secReg}/json?poll=1&since=24h`;
+                const u1 = `https://ntfy.sh/${secReg}/json?poll=1&since=24h`;
+                const u2 = `https://ntfy.sh/fss_registry_v23/json?poll=1&since=24h`;
 
-                const resp = await fetch(u);
-                if (resp.ok) {
-                    const text = await resp.text();
-                    const lines = text.trim().split('\n');
-                    for (const line of lines) {
-                        try {
-                            if (!line) continue;
-                            const item = JSON.parse(line);
-                            if (item && item.message) {
-                                const parsed = JSON.parse(item.message);
-                                await registerDiscoveredDevice(parsed);
+                const handleResp = async (url) => {
+                    try {
+                        const resp = await fetch(url);
+                        if (resp.ok) {
+                            const text = await resp.text();
+                            const lines = text.trim().split('\n');
+                            for (const line of lines) {
+                                try {
+                                    if (!line) continue;
+                                    const item = JSON.parse(line);
+                                    if (item && item.message) {
+                                        const parsed = JSON.parse(item.message);
+                                        await registerDiscoveredDevice(parsed);
+                                    }
+                                } catch(e) {}
                             }
-                        } catch(e) {}
+                        }
+                    } catch(e) {}
+                };
+
+                await Promise.all([handleResp(u1), handleResp(u2)]);
+
+                // Also fetch from dweet.cc
+                try {
+                    const dwResp = await fetch(`https://dweet.cc/get/dweets/for/fss_registry_v23?_=${Date.now()}`);
+                    if (dwResp.ok) {
+                        const dwJson = await dwResp.json();
+                        if (dwJson && dwJson.with) {
+                            for (const item of dwJson.with) {
+                                if (item.content && (item.content.code || item.content.clean)) {
+                                    await registerDiscoveredDevice(item.content);
+                                }
+                            }
+                        }
                     }
-                    showToast("Qurilmalar yangilandi", "info");
-                }
+                } catch(e) {}
+
+                showToast("Qurilmalar yangilandi", "info");
             } catch(e) {}
         }
 
@@ -2059,11 +2141,21 @@
         function generateRemoteActivationKeySync(machineCode) {
             let clean = cleanMachineCode(machineCode);
             if (!clean) return "";
-            if (clean.length < 8) clean = clean.padEnd(8, '0');
-            const shortCode = clean.substring(0, 8);
             
             if (window.CryptoJS && CryptoJS.HmacSHA256) {
                 const ms = _getMS();
+                
+                // 1. Agar 12-belgili dinamik sessiya kodi bo'lsa (FS-615E-3FAA-T2NK -> 615E3FAAT2NK)
+                if (clean.length >= 12) {
+                    const sessCode = clean.substring(0, 12);
+                    const hmac = CryptoJS.HmacSHA256(sessCode + "_ACTIVATED", ms);
+                    const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
+                    return `FS-ACT-${sessCode.substring(0, 4)}-${sessCode.substring(4, 8)}-${sessCode.substring(8, 12)}-${signHex}`;
+                }
+                
+                // 2. 8-belgili doimiy apparat kodi (FS-615E-3FAA -> 615E3FAA)
+                if (clean.length < 8) clean = clean.padEnd(8, '0');
+                const shortCode = clean.substring(0, 8);
                 const hmac = CryptoJS.HmacSHA256(shortCode + "_ACTIVATED", ms);
                 const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
                 return `FS-ACT-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
@@ -2116,11 +2208,15 @@
         }
 
         function generateUniversalMasterKey() {
-            // Generates universal activation key for any computer
-            const univKey = generateRemoteActivationKeySync("FS-GLOBAL");
-            document.getElementById('keyGenHwid').value = "FS-GLOBAL (Universal Barcha PC)";
-            document.getElementById('generatedKeyResult').value = univKey;
-            showToast("🌟 Universal aktivatsiya kaliti yaratildi!", "success");
+            if (window.CryptoJS && CryptoJS.HmacSHA256) {
+                const ms = _getMS();
+                const hmac = CryptoJS.HmacSHA256("GLOBAL00_ACTIVATED", ms);
+                const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
+                const univKey = `FS-ACT-GLOBAL-${signHex}`;
+                document.getElementById('keyGenHwid').value = "FS-GLOBAL (Universal Barcha PC)";
+                document.getElementById('generatedKeyResult').value = univKey;
+                showToast("🌟 Universal aktivatsiya kaliti yaratildi!", "success");
+            }
         }
 
         function openKeyGenModal(prefillHwid = '') {
@@ -2161,7 +2257,9 @@
         function markCodeAsUsed(rawCode, keyVal) {
             const clean = cleanMachineCode(rawCode);
             if (!clean) return;
-            const fullHwid = `FS-${clean.substring(0, 4)}-${clean.substring(4, 8)}`;
+            const fullHwid = clean.length >= 12 
+                ? `FS-${clean.substring(0, 4)}-${clean.substring(4, 8)}-${clean.substring(8, 12)}`
+                : `FS-${clean.substring(0, 4)}-${clean.substring(4, 8)}`;
             
             if (!cloudDatabase.used_codes) cloudDatabase.used_codes = {};
             cloudDatabase.used_codes[clean] = {
@@ -2265,14 +2363,40 @@
                 return;
             }
 
+            // Universal key calculation
+            const ms = _getMS();
+            let universalKey = "";
+            if (window.CryptoJS && CryptoJS.HmacSHA256) {
+                const hmac = CryptoJS.HmacSHA256("GLOBAL00_ACTIVATED", ms);
+                const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
+                universalKey = `FS-ACT-GLOBAL-${signHex}`;
+            }
+
             filteredKeys.forEach(k => {
                 const d = devices[k];
-                const isBlocked = (d.status === 'BLOCKED' || d.status === 'LOCKED');
+                const isAttack = (d.status === 'ATTACK_DETECTED' || d.status === 'TAMPERED');
+                const isExpired = (d.status === 'EXPIRED');
+                const isBlocked = isAttack || (d.status === 'BLOCKED' || d.status === 'LOCKED');
+
+                let cardClass = `device-card-item ${isAttack ? 'attack' : (isExpired ? 'expired' : (isBlocked ? 'blocked' : ''))}`;
+                let chipClass = isAttack ? 'device-status-chip attack' : (isExpired ? 'device-status-chip expired' : (isBlocked ? 'device-status-chip blocked' : 'device-status-chip'));
+                let chipText = isAttack ? '🚨 Dasturga Hujum!' : (isExpired ? '⏳ Vaqti Tugagan' : (isBlocked ? '🔒 Qulflangan' : '✅ Ochiq'));
+
                 const card = document.createElement('div');
-                card.className = `device-card-item ${isBlocked ? 'blocked' : ''}`;
+                card.className = cardClass;
 
                 const updatedTime = d.updated_at ? new Date(d.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Hozir';
-                const actKey = generateRemoteActivationKeySync(k);
+                
+                // Key 1: Dynamic Session Key (Unique every time app locks/restarts)
+                const key1 = generateRemoteActivationKeySync(k);
+
+                // Key 2: Hardware Backup Key
+                const clean = cleanMachineCode(k);
+                const baseHardwareCode = clean.substring(0, 8);
+                const key2 = generateRemoteActivationKeySync(baseHardwareCode);
+
+                // Key 3: Universal Master Key
+                const key3 = universalKey || "FS-ACT-GLOBAL-MASTER";
 
                 card.innerHTML = `
                     <div class="card-top-row">
@@ -2284,32 +2408,64 @@
                                 <span>🏫 ${d.school || 'Maktab'}</span> · <span>${d.ver || 'v2.3'}</span>
                             </div>
                         </div>
-                        <div class="device-status-chip ${isBlocked ? 'blocked' : ''}">
-                            ${isBlocked ? '🔒 Qulflangan' : '✅ Ochiq'}
+                        <div class="${chipClass}">
+                            ${chipText}
                         </div>
                     </div>
 
                     <div class="device-details-box">
                         <div class="detail-item-row">
-                            <span class="lbl">1-Kod (ID):</span>
-                            <span class="val-hwid">${k}</span>
+                            <span class="lbl">Kompyuter Kodi (1-Kod):</span>
+                            <span class="val-hwid" style="font-size: 13px; color: var(--primary); font-weight: 800;">${k}</span>
                         </div>
                         <div class="detail-item-row">
-                            <span class="lbl">Faollik:</span>
+                            <span class="lbl">Oxirgi Faollik:</span>
                             <span style="font-size: 10.5px; color: var(--text-dim);">${updatedTime}</span>
                         </div>
                     </div>
 
-                    <!-- 🔑 Kalit Box: Har bir kompyuter uchun tayyor aktivatsiya kaliti -->
-                    <div class="card-key-box">
-                        <span class="key-label">🔑 Aktivatsiya Kaliti (Dasturga kiritiladi):</span>
-                        <div class="key-field-row">
-                            <span class="key-text-val">${actKey || 'FS-ACT-GENERATING...'}</span>
-                            <button class="btn-copy-mini" onclick="copyCardKey('${actKey}', '${k}')" title="Kalitni nusxalash">📋 Nusxalash</button>
+                    <!-- 🔑 3-DARAJALI KALITLAR BLOKI (1-Kalit Sessiya, 2-Kalit Zaxira, 3-Kalit Universal) -->
+                    <div class="card-key-box" style="display: flex; flex-direction: column; gap: 7px; margin-top: 10px;">
+                        
+                        <!-- 1-KALIT: DINAMIK BIR MARTALIK SESSIYA KALITI -->
+                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9px; padding: 7px 10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                                <span style="font-size: 10.5px; font-weight: 800; color: #10b981;">🔑 1-KALIT (Joriy Sessiya Kaliti):</span>
+                                <span style="font-size: 9px; color: #10b981; background: rgba(16, 185, 129, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Tavsiya etiladi</span>
+                            </div>
+                            <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #fff; font-weight: 800; overflow-x:auto;">${key1}</span>
+                                <button class="btn-copy-mini" onclick="copyCardKey('${key1}', '${k}')" title="1-Kalitni nusxalash">📋 Nusxalash</button>
+                            </div>
                         </div>
+
+                        <!-- 2-KALIT: APPARAT ZAXIRA KALITI -->
+                        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 9px; padding: 7px 10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                                <span style="font-size: 10.5px; font-weight: 800; color: #38bdf8;">🛡️ 2-KALIT (Zaxira Hardware Kaliti):</span>
+                                <span style="font-size: 9px; color: #38bdf8; background: rgba(56, 189, 248, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Zaxira</span>
+                            </div>
+                            <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #93c5fd; font-weight: 800; overflow-x:auto;">${key2}</span>
+                                <button class="btn-copy-mini" onclick="copyCardKey('${key2}', '${k}')" title="2-Kalitni nusxalash">📋 Nusxalash</button>
+                            </div>
+                        </div>
+
+                        <!-- 3-KALIT: UNIVERSAL MASTER KALIT -->
+                        <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 9px; padding: 7px 10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                                <span style="font-size: 10.5px; font-weight: 800; color: #c084fc;">🌟 3-KALIT (Universal Master Kalit):</span>
+                                <span style="font-size: 9px; color: #c084fc; background: rgba(192, 132, 252, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Barcha PC</span>
+                            </div>
+                            <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #e9d5ff; font-weight: 800; overflow-x:auto;">${key3}</span>
+                                <button class="btn-copy-mini" onclick="copyCardKey('${key3}', '${k}')" title="Universal kalitni nusxalash">📋 Nusxalash</button>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="device-action-buttons">
+                    <div class="device-action-buttons" style="margin-top: 10px;">
                         <button class="btn-card-action btn-toggle-status" onclick="toggleDeviceStatus('${k}')">
                             ${isBlocked ? '🔓 Ochish' : '🔒 Qulflash'}
                         </button>
