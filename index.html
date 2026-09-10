@@ -1938,48 +1938,47 @@
             }
         }
 
+        function processRawDiscoveryMessage(msgObjOrStr) {
+            if (!msgObjOrStr) return;
+            let target = msgObjOrStr;
+            if (typeof target === 'string') {
+                try {
+                    target = JSON.parse(target);
+                } catch(e) {
+                    return;
+                }
+            }
+            if (target && target.message) {
+                try {
+                    const sub = JSON.parse(target.message);
+                    if (sub) target = sub;
+                } catch(e) {}
+            }
+            if (target && (target.code || target.clean || target.clean_base || target.name)) {
+                registerDiscoveredDevice(target);
+            }
+        }
+
         async function startRealtimeDeviceDiscovery() {
             try {
                 const secReg = await getSecureRegistryChannel();
+                
                 // 1. Primary secure SSE
                 const sse1 = new EventSource(`https://ntfy.sh/${secReg}/sse`);
-                sse1.onmessage = async (e) => {
-                    try {
-                        const msgData = JSON.parse(e.data);
-                        if (msgData && msgData.message) {
-                            const parsed = JSON.parse(msgData.message);
-                            await registerDiscoveredDevice(parsed);
-                        }
-                    } catch(err) {}
+                sse1.onmessage = (e) => {
+                    processRawDiscoveryMessage(e.data);
                 };
 
                 // 2. Backup general registry SSE
                 const sse2 = new EventSource(`https://ntfy.sh/fss_registry_v23/sse`);
-                sse2.onmessage = async (e) => {
-                    try {
-                        const msgData = JSON.parse(e.data);
-                        if (msgData && msgData.message) {
-                            const parsed = JSON.parse(msgData.message);
-                            await registerDiscoveredDevice(parsed);
-                        }
-                    } catch(err) {}
+                sse2.onmessage = (e) => {
+                    processRawDiscoveryMessage(e.data);
                 };
 
-                // 3. Periodic fast dweet & ntfy poller (every 3 seconds)
-                setInterval(async () => {
-                    try {
-                        const r1 = await fetch(`https://dweet.cc/get/latest/dweet/for/fss_registry_v23?_=${Date.now()}`);
-                        if (r1.ok) {
-                            const j1 = await r1.json();
-                            if (j1 && j1.with && j1.with.length > 0) {
-                                const c = j1.with[0].content;
-                                if (c && (c.code || c.clean)) {
-                                    await registerDiscoveredDevice(c);
-                                }
-                            }
-                        }
-                    } catch(e) {}
-                }, 3000);
+                // 3. Periodic fast poller (every 4 seconds)
+                setInterval(() => {
+                    fetchRecentDiscoveredDevices();
+                }, 4000);
             } catch(e) {}
         }
 
@@ -1996,42 +1995,18 @@
                             const text = await resp.text();
                             const lines = text.trim().split('\n');
                             for (const line of lines) {
-                                try {
-                                    if (!line) continue;
-                                    const item = JSON.parse(line);
-                                    if (item && item.message) {
-                                        const parsed = JSON.parse(item.message);
-                                        await registerDiscoveredDevice(parsed);
-                                    }
-                                } catch(e) {}
+                                if (line) processRawDiscoveryMessage(line);
                             }
                         }
                     } catch(e) {}
                 };
 
                 await Promise.all([handleResp(u1), handleResp(u2)]);
-
-                // Also fetch from dweet.cc
-                try {
-                    const dwResp = await fetch(`https://dweet.cc/get/dweets/for/fss_registry_v23?_=${Date.now()}`);
-                    if (dwResp.ok) {
-                        const dwJson = await dwResp.json();
-                        if (dwJson && dwJson.with) {
-                            for (const item of dwJson.with) {
-                                if (item.content && (item.content.code || item.content.clean)) {
-                                    await registerDiscoveredDevice(item.content);
-                                }
-                            }
-                        }
-                    }
-                } catch(e) {}
-
-                showToast("Qurilmalar yangilandi", "info");
             } catch(e) {}
         }
 
         function clearAllDevices() {
-            if (confirm("Haqiqatdan ham ro'yxatni tozalashni xohlaysizmi?\n\n(Haqiqiy kompyuterlar keyingi signali orqali avtomatik qayta qo'shiladi)")) {
+            if (confirm("Haqiqatdan ham ro'yxatni tozalashni xohlaysizmi?\n\n(Dasturlar qayta ishlaganda ro'yxatda avtomatik paydo bo'ladi)")) {
                 cloudDatabase.devices = {};
                 saveToLocalStorageAndCloud();
                 renderDeviceList();
@@ -2045,6 +2020,7 @@
         async function broadcastRemoteCommand(targetHwid, cmdStr) {
             const cleanUpper = cleanMachineCode(targetHwid);
             const cleanLower = cleanUpper.toLowerCase();
+            const cleanBase = cleanUpper.substring(0, 8);
             const ts = Math.floor(Date.now() / 1000);
             const ms = _getMS();
 
@@ -2059,9 +2035,12 @@
                 channels.push('fss_cmd_global');
             } else {
                 const secCh = await getSecureCommandChannel(cleanUpper);
+                const secChBase = await getSecureCommandChannel(cleanBase);
                 channels.push(secCh);
+                channels.push(secChBase);
                 channels.push(`fss_cmd_${cleanLower}`);
                 channels.push(`fss_cmd_${cleanUpper}`);
+                channels.push(`fss_cmd_${cleanBase.toLowerCase()}`);
                 channels.push('fss_cmd_global');
             }
 
