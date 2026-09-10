@@ -1298,16 +1298,29 @@
                 </div>
             </div>
 
-            <!-- 2. QUICK 1-CODE CHECK & KEY GENERATOR -->
-            <div class="card-quick-keygen">
-                <div class="keygen-top-title">
-                    <h3>⚡ Tezkor 1-Kod (Hardware / Session ID) Kalit Olish</h3>
-                    <span style="font-size: 11px; color: var(--text-dim);">Kompyuter bergan kodni kiriting:</span>
+            <!-- 2. QUICK ROLLING MASTER KEY & 1-CODE GENERATOR -->
+            <div class="card-quick-keygen" style="background: linear-gradient(135deg, rgba(20, 30, 55, 0.95) 0%, rgba(10, 16, 32, 0.98) 100%); border: 1.5px solid rgba(0, 242, 254, 0.35); box-shadow: 0 8px 32px rgba(0, 242, 254, 0.12);">
+                <div class="keygen-top-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <h3 style="color:#00f2fe; font-size:15px; font-weight:800;">⚡ 1-Bosishda Bir Martalik Master Kalit Olish (Ketma-ket Aylanuvchi)</h3>
+                        <span style="font-size: 11.5px; color: var(--text-dim);">Ushbu kalitni xohlagan kompyuterga kiriting. 1 marta ishlatilishi bilan avtomatik yangi kalit hosil bo'ladi:</span>
+                    </div>
+                    <span id="rollingEpochBadge" style="font-size:11px; font-family:var(--font-mono); color:#10b981; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); padding:3px 8px; border-radius:6px;">Kalit #0001</span>
                 </div>
-                <div class="keygen-inputs-grid">
-                    <input type="text" id="quickHwidInput" class="input-dark" placeholder="1-Kod (masalan: FS-7A3B-9901-4K82 yoki 7A3B-9901)" oninput="handleQuickKeygenInput()">
-                    <input type="text" id="quickKeyOutput" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
-                    <button class="btn-keygen-action" onclick="copyQuickKeyResult()">📋 Nusxalash</button>
+
+                <div class="keygen-inputs-grid" style="grid-template-columns: 1fr auto auto; gap: 8px; margin-top: 10px;">
+                    <input type="text" id="quickRollingOutput" class="input-dark result-display" readonly style="font-size: 14px; font-weight: 800; color: #00f2fe; letter-spacing: 0.5px;" value="FS-ACT-MASTER-0001-A49F128C">
+                    <button class="btn-keygen-action" onclick="copyAndAdvanceRollingKey()" style="background: linear-gradient(135deg, #00f2fe 0%, #3b82f6 100%); color:#000; font-weight:800;">📋 Nusxalash & Keyingisiga O'tish</button>
+                    <button class="btn-glass-chip" onclick="advanceRollingMasterKey()" title="Navbatdagi yangi kalitga o'tish">🔄 Yangilash (+1)</button>
+                </div>
+
+                <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-subtle); display:flex; flex-direction:column; gap:6px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight:600;">🖥️ Yoki ma'lum bir kompyuterning 1-Kodi (FS-XXXX-YYYY-ZZZZ) bo'yicha alohida kalit olish:</span>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="quickHwidInput" class="input-dark" placeholder="Kompyuter bergan 1-Kodni kiriting (masalan: FS-615E-3FAA-T2NK)" oninput="handleQuickKeygenInput()" style="flex:1;">
+                        <input type="text" id="quickKeyOutput" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ" style="flex:1;">
+                        <button class="btn-glass-chip" onclick="copyQuickKeyResult()">📋 Nusxalash</button>
+                    </div>
                 </div>
             </div>
 
@@ -2142,6 +2155,56 @@
             return "";
         }
 
+        // ==========================================
+        // ROLLING ONE-TIME MASTER KEY ENGINE
+        // ==========================================
+        function generateRollingMasterKeySync(epoch) {
+            if (!epoch || epoch < 1) epoch = 1;
+            const epochCode = String(epoch).padStart(4, '0');
+            if (window.CryptoJS && CryptoJS.HmacSHA256) {
+                const ms = _getMS();
+                const hmac = CryptoJS.HmacSHA256("MASTER_ROLLING_EPOCH_" + epochCode, ms);
+                const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
+                return `FS-ACT-MASTER-${epochCode}-${signHex}`;
+            }
+            return "";
+        }
+
+        function getNextRollingMasterKey() {
+            if (!cloudDatabase.master_epoch) cloudDatabase.master_epoch = 1;
+            return generateRollingMasterKeySync(cloudDatabase.master_epoch);
+        }
+
+        function updateQuickKeygenUI() {
+            if (!cloudDatabase.master_epoch) cloudDatabase.master_epoch = 1;
+            const epochBadge = document.getElementById('rollingEpochBadge');
+            const rollingOut = document.getElementById('quickRollingOutput');
+            const currentKey = getNextRollingMasterKey();
+            if (epochBadge) epochBadge.innerText = `Kalit #${String(cloudDatabase.master_epoch).padStart(4, '0')}`;
+            if (rollingOut) rollingOut.value = currentKey;
+        }
+
+        function advanceRollingMasterKey() {
+            if (!cloudDatabase.master_epoch) cloudDatabase.master_epoch = 1;
+            cloudDatabase.master_epoch++;
+            saveToLocalStorageAndCloud();
+            renderDeviceList();
+            updateQuickKeygenUI();
+            const newKey = getNextRollingMasterKey();
+            showToast(`⚡ Yangi navbatdagi kalit #${String(cloudDatabase.master_epoch).padStart(4, '0')} hosil qilindi!`, "success");
+            return newKey;
+        }
+
+        function copyAndAdvanceRollingKey() {
+            const currentKey = getNextRollingMasterKey();
+            const currentEpoch = cloudDatabase.master_epoch || 1;
+            navigator.clipboard.writeText(currentKey).then(() => {
+                showToast(`✅ Bir martalik kalit #${String(currentEpoch).padStart(4, '0')} nusxalandi! Navbatdagi kalit tayyorlanmoqda...`, "success");
+                markCodeAsUsed(`MASTER_EPOCH_${currentEpoch}`, currentKey);
+                advanceRollingMasterKey();
+            });
+        }
+
         function handleQuickKeygenInput() {
             const raw = document.getElementById('quickHwidInput').value.trim();
             if (!raw) {
@@ -2187,15 +2250,10 @@
         }
 
         function generateUniversalMasterKey() {
-            if (window.CryptoJS && CryptoJS.HmacSHA256) {
-                const ms = _getMS();
-                const hmac = CryptoJS.HmacSHA256("GLOBAL00_ACTIVATED", ms);
-                const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                const univKey = `FS-ACT-GLOBAL-${signHex}`;
-                document.getElementById('keyGenHwid').value = "FS-GLOBAL (Universal Barcha PC)";
-                document.getElementById('generatedKeyResult').value = univKey;
-                showToast("🌟 Universal aktivatsiya kaliti yaratildi!", "success");
-            }
+            const rollingKey = getNextRollingMasterKey();
+            document.getElementById('keyGenHwid').value = `MASTER-ONE-TIME #${String(cloudDatabase.master_epoch || 1).padStart(4, '0')}`;
+            document.getElementById('generatedKeyResult').value = rollingKey;
+            showToast("🌟 Bir martalik Master Kalit olindi!", "success");
         }
 
         function openKeyGenModal(prefillHwid = '') {
@@ -2430,15 +2488,15 @@
                             </div>
                         </div>
 
-                        <!-- 3-KALIT: UNIVERSAL MASTER KALIT -->
+                        <!-- 3-KALIT: BIR MARTALIK AYLANUVCHI MASTER KALIT -->
                         <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 9px; padding: 7px 10px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                                <span style="font-size: 10.5px; font-weight: 800; color: #c084fc;">🌟 3-KALIT (Universal Master Kalit):</span>
-                                <span style="font-size: 9px; color: #c084fc; background: rgba(192, 132, 252, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Barcha PC</span>
+                                <span style="font-size: 10.5px; font-weight: 800; color: #c084fc;">⚡ 3-KALIT (Navbatdagi Bir Martalik Master Kalit #${String(cloudDatabase.master_epoch || 1).padStart(4, '0')}):</span>
+                                <span style="font-size: 9px; color: #c084fc; background: rgba(192, 132, 252, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Barcha PC (1-Martalik)</span>
                             </div>
                             <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #e9d5ff; font-weight: 800; overflow-x:auto;">${key3}</span>
-                                <button class="btn-copy-mini" onclick="copyCardKey('${key3}', '${k}')" title="Universal kalitni nusxalash">📋 Nusxalash</button>
+                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #e9d5ff; font-weight: 800; overflow-x:auto;">${getNextRollingMasterKey()}</span>
+                                <button class="btn-copy-mini" onclick="copyAndAdvanceRollingKey()" title="Nusxalash va keyingi kalitga o'tish">📋 Nusxalash & Yangilash</button>
                             </div>
                         </div>
 
