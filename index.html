@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FaceSecur1ty Cloud - Boshqaruv Markazi</title>
+    <title>Cloud Hub v2.3 - Boshqaruv Markazi</title>
     
-    <!-- Meta and PWA tags for mobile -->
+    <!-- PWA & Mobile Web Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FaceSecurity Cloud">
     <meta name="theme-color" content="#060911">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,9 +20,9 @@
     <style>
         :root {
             --bg-base: #060911;
-            --bg-surface: rgba(13, 19, 33, 0.75);
-            --bg-surface-elevated: rgba(20, 29, 49, 0.85);
-            --bg-glass-input: rgba(6, 11, 22, 0.8);
+            --bg-surface: rgba(13, 20, 36, 0.78);
+            --bg-surface-elevated: rgba(20, 30, 52, 0.88);
+            --bg-glass-input: rgba(6, 11, 24, 0.85);
             
             --primary: #00f2fe;
             --primary-glow: rgba(0, 242, 254, 0.35);
@@ -44,8 +46,8 @@
             --font-mono: 'JetBrains Mono', monospace;
             
             --radius-sm: 10px;
-            --radius-md: 16px;
-            --radius-lg: 22px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
             --radius-full: 9999px;
             
             --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -77,27 +79,28 @@
             letter-spacing: -0.01em;
         }
 
-        /* ------------------ PIN GATE OVERLAY ------------------ */
+        /* ------------------ STEALTH PIN GATE ------------------ */
         #pinGateOverlay {
             position: fixed;
             inset: 0;
-            z-index: 99999;
-            background: rgba(4, 7, 14, 0.94);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            z-index: 999999;
+            background: rgba(4, 7, 14, 0.95);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 16px;
+            overflow-y: auto;
         }
 
         .pin-card {
-            background: linear-gradient(135deg, rgba(16, 24, 44, 0.85) 0%, rgba(10, 16, 30, 0.95) 100%);
+            background: linear-gradient(135deg, rgba(16, 25, 46, 0.9) 0%, rgba(9, 15, 30, 0.98) 100%);
             border: 1px solid var(--border-subtle);
-            border-radius: 28px;
-            padding: 36px 28px;
+            border-radius: 26px;
+            padding: 28px 22px;
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             text-align: center;
             box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85), 0 0 40px var(--primary-glow);
             animation: zoomIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -116,37 +119,58 @@
         }
 
         .pin-logo-wrap {
-            width: 76px;
-            height: 76px;
-            margin: 0 auto 16px;
-            border-radius: 22px;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 14px;
+            border-radius: 18px;
             background: rgba(0, 242, 254, 0.08);
             border: 1px solid var(--border-focus);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 25px var(--primary-glow);
+            box-shadow: 0 0 20px var(--primary-glow);
         }
 
         .pin-logo-wrap img {
-            width: 48px;
-            height: 48px;
+            width: 38px;
+            height: 38px;
             object-fit: contain;
         }
 
         .pin-card h2 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .pin-card p {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-dim);
-            margin-bottom: 24px;
+            margin-bottom: 18px;
+        }
+
+        .pin-input-field {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-glass-input);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            color: var(--primary);
+            font-family: var(--font-mono);
+            font-size: 20px;
+            letter-spacing: 6px;
+            text-align: center;
+            outline: none;
+            transition: all 0.25s ease;
+            margin-bottom: 14px;
+        }
+
+        .pin-input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
         }
 
         .pin-input-field {
@@ -157,59 +181,101 @@
             border-radius: var(--radius-md);
             color: var(--primary);
             font-family: var(--font-mono);
-            font-size: 22px;
-            letter-spacing: 8px;
+            font-size: 18px;
+            letter-spacing: 3px;
             text-align: center;
             outline: none;
             transition: all 0.25s ease;
             margin-bottom: 18px;
         }
 
-        .pin-input-field:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 25px var(--primary-glow);
+        .card-key-box {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            margin: 8px 0;
         }
 
-        .pin-keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 18px;
+        .card-key-box .key-label {
+            font-size: 10.5px;
+            color: var(--text-dim);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
         }
 
-        .keypad-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            color: var(--text-main);
-            font-size: 20px;
+        .card-key-box .key-field-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .card-key-box .key-text-val {
+            font-family: var(--font-mono);
+            font-size: 11.5px;
             font-weight: 700;
-            padding: 14px 0;
+            color: var(--accent-green);
+            word-break: break-all;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .btn-copy-mini {
+            background: rgba(0, 242, 254, 0.12);
+            border: 1px solid rgba(0, 242, 254, 0.35);
+            color: var(--primary);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.15s ease;
+            white-space: nowrap;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-copy-mini:active {
+            transform: scale(0.95);
+            background: rgba(0, 242, 254, 0.25);
+        }
+
+        .btn-universal-keygen {
+            background: linear-gradient(135deg, #8b5cf6 0%, #00f2fe 100%);
+            color: #040711;
+            border: none;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.35);
+            transition: all 0.2s;
         }
 
-        .keypad-btn:active {
-            background: rgba(0, 242, 254, 0.2);
-            border-color: var(--primary);
-            transform: scale(0.96);
+        .btn-universal-keygen:active {
+            transform: scale(0.98);
         }
 
         .pin-action-btn {
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
             border: none;
             border-radius: var(--radius-md);
             color: #040711;
             font-weight: 800;
-            font-size: 15px;
+            font-size: 14.5px;
             cursor: pointer;
             transition: all 0.25s ease;
-            box-shadow: 0 10px 25px var(--primary-glow);
+            box-shadow: 0 8px 20px var(--primary-glow);
             letter-spacing: 0.5px;
         }
 
@@ -219,9 +285,9 @@
 
         .pin-error-msg {
             color: var(--accent-red);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            margin-top: 14px;
+            margin-top: 12px;
             display: none;
             animation: shake 0.3s;
         }
@@ -242,77 +308,90 @@
 
         /* ------------------ TOP HEADER ------------------ */
         header {
-            background: rgba(8, 13, 24, 0.82);
+            background: rgba(8, 13, 24, 0.86);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-subtle);
             position: sticky;
             top: 0;
             z-index: 100;
-            padding: 12px 20px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
         }
 
         .header-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            min-width: 0;
         }
 
         .brand-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             background: rgba(0, 242, 254, 0.08);
             border: 1px solid var(--border-focus);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 14px var(--primary-glow);
+            box-shadow: 0 0 12px var(--primary-glow);
             flex-shrink: 0;
         }
 
         .brand-icon img {
-            width: 26px;
-            height: 26px;
+            width: 22px;
+            height: 22px;
             object-fit: contain;
         }
 
+        .brand-titles {
+            min-width: 0;
+        }
+
         .brand-titles h1 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
             background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .brand-titles .status-line {
-            font-size: 11px;
+            font-size: 10.5px;
             color: var(--text-dim);
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-top: 2px;
+            gap: 5px;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .live-indicator {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             background: var(--accent-green);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
             animation: pulseGreen 1.8s infinite;
+            flex-shrink: 0;
         }
 
         /* Desktop top action buttons */
         .desktop-header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         @media (max-width: 768px) {
@@ -325,14 +404,14 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--border-subtle);
             color: var(--text-main);
-            padding: 8px 14px;
+            padding: 7px 12px;
             border-radius: var(--radius-sm);
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.2s;
             white-space: nowrap;
         }
@@ -361,11 +440,11 @@
             left: 0;
             right: 0;
             z-index: 999;
-            background: rgba(8, 13, 24, 0.88);
+            background: rgba(8, 13, 24, 0.92);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border-top: 1px solid var(--border-subtle);
-            padding: 8px 12px calc(8px + var(--safe-bottom));
+            padding: 6px 8px calc(6px + var(--safe-bottom));
             justify-content: space-around;
             align-items: center;
         }
@@ -381,21 +460,21 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 6px 12px;
-            border-radius: 12px;
+            gap: 3px;
+            padding: 5px 10px;
+            border-radius: 10px;
             color: var(--text-dim);
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             border: none;
             background: transparent;
-            min-width: 68px;
+            min-width: 60px;
         }
 
         .nav-dock-item .dock-icon {
-            font-size: 19px;
+            font-size: 18px;
             transition: transform 0.2s;
         }
 
@@ -415,35 +494,28 @@
             max-width: 1280px;
             width: 100%;
             margin: 0 auto;
-            padding: 16px 16px 24px;
+            padding: 14px 14px 20px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         @media (min-width: 769px) {
             main {
-                padding: 24px;
-                gap: 20px;
+                padding: 20px;
+                gap: 18px;
             }
-        }
-
-        /* Tab Pages for Mobile and Hybrid Views */
-        .view-section {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
         }
 
         /* ------------------ GLOBAL STATUS HERO CARD ------------------ */
         .hero-banner-card {
-            background: linear-gradient(135deg, rgba(16, 26, 48, 0.8) 0%, rgba(10, 16, 32, 0.9) 100%);
+            background: linear-gradient(135deg, rgba(16, 26, 48, 0.85) 0%, rgba(10, 16, 32, 0.95) 100%);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
-            padding: 18px 20px;
+            padding: 16px 18px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
         }
 
         .hero-banner-card::before {
@@ -460,69 +532,61 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
+            gap: 10px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
         }
 
         .hero-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             color: var(--text-main);
         }
 
         .hero-status-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
+            gap: 5px;
+            padding: 5px 10px;
             border-radius: var(--radius-full);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             background: rgba(16, 185, 129, 0.12);
             color: var(--accent-green);
             border: 1px solid var(--accent-green);
-            box-shadow: 0 0 14px var(--accent-green-glow);
+            box-shadow: 0 0 12px var(--accent-green-glow);
         }
 
         .hero-status-pill.blocked {
             background: rgba(244, 63, 94, 0.12);
             color: var(--accent-red);
             border-color: var(--accent-red);
-            box-shadow: 0 0 14px var(--accent-red-glow);
+            box-shadow: 0 0 12px var(--accent-red-glow);
         }
 
         .hero-actions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px;
-        }
-
-        @media (max-width: 600px) {
-            .hero-actions-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .hero-actions-grid .btn-auth-all {
-                grid-column: span 2;
-            }
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
         }
 
         .btn-hero {
-            padding: 13px 16px;
+            padding: 11px 14px;
             border-radius: var(--radius-md);
             border: none;
-            font-size: 13.5px;
+            font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
         }
 
         .btn-hero:active {
@@ -532,19 +596,19 @@
         .btn-unlock-all {
             background: linear-gradient(135deg, #059669 0%, #10b981 100%);
             color: #ffffff;
-            box-shadow: 0 4px 15px var(--accent-green-glow);
+            box-shadow: 0 4px 12px var(--accent-green-glow);
         }
 
         .btn-lock-all {
             background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
             color: #ffffff;
-            box-shadow: 0 4px 15px var(--accent-red-glow);
+            box-shadow: 0 4px 12px var(--accent-red-glow);
         }
 
         .btn-auth-all {
             background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
             color: #ffffff;
-            box-shadow: 0 4px 15px var(--accent-purple-glow);
+            box-shadow: 0 4px 12px var(--accent-purple-glow);
         }
 
         /* ------------------ QUICK 1-CODE GENERATOR CARD ------------------ */
@@ -552,21 +616,21 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
-            padding: 16px 18px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            padding: 14px 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
         .keygen-top-title {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 4px;
         }
 
         .keygen-top-title h3 {
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -574,33 +638,34 @@
         }
 
         .keygen-inputs-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 1.5fr auto;
-            gap: 10px;
-            align-items: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        @media (max-width: 768px) {
+        @media (min-width: 769px) {
             .keygen-inputs-grid {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 1.2fr 1.5fr auto;
+                align-items: center;
             }
         }
 
         .input-dark {
             width: 100%;
-            padding: 12px 14px;
+            padding: 10px 12px;
             background: var(--bg-glass-input);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
             color: var(--text-main);
-            font-size: 13.5px;
+            font-size: 14px;
             outline: none;
             transition: all 0.2s;
         }
 
         .input-dark:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 14px var(--primary-glow);
+            box-shadow: 0 0 12px var(--primary-glow);
         }
 
         .input-dark.result-display {
@@ -616,9 +681,9 @@
             background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
             color: #040711;
             border: none;
-            padding: 12px 18px;
+            padding: 10px 16px;
             border-radius: var(--radius-sm);
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -627,7 +692,8 @@
             gap: 6px;
             white-space: nowrap;
             transition: all 0.2s;
-            box-shadow: 0 4px 14px var(--primary-glow);
+            box-shadow: 0 4px 12px var(--primary-glow);
+            min-height: 40px;
         }
 
         .btn-keygen-action:active {
@@ -637,21 +703,22 @@
         /* ------------------ REALTIME DISCOVERY BANNER ------------------ */
         .discovery-banner {
             background: rgba(0, 242, 254, 0.04);
-            border: 1px solid rgba(0, 242, 254, 0.18);
+            border: 1px solid rgba(0, 242, 254, 0.16);
             border-radius: var(--radius-md);
-            padding: 10px 14px;
+            padding: 9px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 12px;
-            gap: 10px;
+            font-size: 11.5px;
+            gap: 8px;
         }
 
         .discovery-content {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             color: var(--text-dim);
+            min-width: 0;
         }
 
         .discovery-content b {
@@ -662,7 +729,7 @@
         .controls-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         @media (min-width: 769px) {
@@ -680,7 +747,7 @@
 
         .search-container input {
             width: 100%;
-            padding: 11px 16px 11px 38px;
+            padding: 10px 14px 10px 34px;
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
@@ -692,54 +759,55 @@
 
         .search-container input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 14px var(--primary-glow);
+            box-shadow: 0 0 12px var(--primary-glow);
         }
 
         .search-icon-fixed {
             position: absolute;
-            left: 12px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
-            font-size: 14px;
+            font-size: 13px;
             pointer-events: none;
         }
 
         .stats-and-buttons {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
         .badge-count {
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
-            padding: 7px 12px;
+            padding: 6px 10px;
             border-radius: var(--radius-sm);
-            font-size: 12px;
+            font-size: 11.5px;
             color: var(--text-dim);
         }
 
         .badge-count b {
             color: var(--text-main);
-            margin-left: 3px;
+            margin-left: 2px;
         }
 
         .btn-add-primary {
             background: linear-gradient(135deg, var(--secondary), var(--primary));
             color: #040711;
             border: none;
-            padding: 9px 15px;
+            padding: 8px 14px;
             border-radius: var(--radius-sm);
             font-weight: 700;
-            font-size: 12.5px;
+            font-size: 12px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.2s;
-            box-shadow: 0 4px 14px var(--primary-glow);
+            box-shadow: 0 4px 12px var(--primary-glow);
+            white-space: nowrap;
         }
 
         .btn-add-primary:active {
@@ -750,20 +818,20 @@
         .devices-grid-layout {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         @media (min-width: 640px) {
             .devices-grid-layout {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 16px;
+                gap: 14px;
             }
         }
 
         @media (min-width: 1024px) {
             .devices-grid-layout {
                 grid-template-columns: repeat(3, 1fr);
-                gap: 18px;
+                gap: 16px;
             }
         }
 
@@ -771,10 +839,10 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
-            padding: 16px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             position: relative;
             overflow: hidden;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -784,7 +852,7 @@
             background: var(--bg-surface-elevated);
             border-color: var(--border-focus);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
 
         .device-card-item::before {
@@ -805,18 +873,18 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 8px;
+            gap: 6px;
         }
 
         .pc-info-col {
             display: flex;
             flex-direction: column;
             gap: 2px;
-            overflow: hidden;
+            min-width: 0;
         }
 
         .pc-title-text {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: #ffffff;
             white-space: nowrap;
@@ -824,21 +892,24 @@
             text-overflow: ellipsis;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .pc-sub-text {
-            font-size: 11.5px;
+            font-size: 11px;
             color: var(--text-dim);
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .device-status-chip {
-            padding: 4px 9px;
+            padding: 3px 8px;
             border-radius: var(--radius-full);
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.5px;
             text-transform: uppercase;
@@ -857,18 +928,18 @@
         .device-details-box {
             background: rgba(0, 0, 0, 0.35);
             border-radius: var(--radius-sm);
-            padding: 10px 12px;
+            padding: 8px 10px;
             border: 1px solid rgba(255, 255, 255, 0.03);
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
         .detail-item-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 11.5px;
+            font-size: 11px;
         }
 
         .detail-item-row .lbl {
@@ -888,10 +959,10 @@
         }
 
         .btn-card-action {
-            padding: 8px 10px;
+            padding: 8px 8px;
             border-radius: var(--radius-sm);
             border: none;
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -899,6 +970,8 @@
             justify-content: center;
             gap: 4px;
             transition: all 0.2s;
+            min-height: 36px;
+            white-space: nowrap;
         }
 
         .btn-toggle-status {
@@ -926,8 +999,9 @@
             background: transparent;
             color: var(--text-muted);
             border: 1px solid transparent;
-            font-size: 10.5px;
+            font-size: 10px;
             padding: 4px;
+            min-height: 24px;
         }
 
         .btn-delete-ghost:hover {
@@ -937,7 +1011,7 @@
         /* ------------------ EMPTY STATE ------------------ */
         .empty-devices-placeholder {
             grid-column: 1 / -1;
-            padding: 40px 16px;
+            padding: 36px 14px;
             text-align: center;
             background: var(--bg-surface);
             border: 1px dashed var(--border-subtle);
@@ -945,8 +1019,8 @@
         }
 
         .empty-devices-placeholder .icon {
-            font-size: 40px;
-            margin-bottom: 8px;
+            font-size: 36px;
+            margin-bottom: 6px;
             opacity: 0.7;
         }
 
@@ -954,27 +1028,28 @@
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            z-index: 10000;
+            z-index: 100000;
             background: rgba(4, 7, 14, 0.88);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 14px;
         }
 
         .modal-sheet {
             background: #0d1527;
             border: 1px solid var(--border-focus);
-            border-radius: 24px;
-            padding: 24px;
+            border-radius: 22px;
+            padding: 20px;
             width: 100%;
             max-width: 480px;
             box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 35px var(--primary-glow);
             animation: sheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             max-height: 90vh;
             overflow-y: auto;
+            position: relative;
         }
 
         @media (max-width: 600px) {
@@ -984,9 +1059,9 @@
             }
 
             .modal-sheet {
-                border-radius: 24px 24px 0 0;
+                border-radius: 22px 22px 0 0;
                 max-width: 100%;
-                padding: 20px 18px calc(24px + var(--safe-bottom));
+                padding: 16px 16px calc(20px + var(--safe-bottom));
                 border-bottom: none;
             }
         }
@@ -995,11 +1070,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
         }
 
         .sheet-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #ffffff;
             display: flex;
@@ -1011,8 +1086,8 @@
             background: rgba(255, 255, 255, 0.05);
             border: none;
             color: var(--text-dim);
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             font-size: 16px;
             cursor: pointer;
@@ -1024,12 +1099,12 @@
         .form-row {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-bottom: 14px;
+            gap: 4px;
+            margin-bottom: 12px;
         }
 
         .form-row label {
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-dim);
         }
@@ -1038,28 +1113,28 @@
             display: flex;
             justify-content: flex-end;
             gap: 8px;
-            margin-top: 20px;
+            margin-top: 16px;
         }
 
         /* ------------------ TOAST ALERTS ------------------ */
         #toastContainer {
             position: fixed;
-            bottom: calc(84px + var(--safe-bottom));
-            left: 16px;
-            right: 16px;
-            z-index: 99999;
+            bottom: calc(76px + var(--safe-bottom));
+            left: 12px;
+            right: 12px;
+            z-index: 999999;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             pointer-events: none;
             align-items: center;
         }
 
         @media (min-width: 769px) {
             #toastContainer {
-                bottom: 24px;
+                bottom: 20px;
                 left: auto;
-                right: 24px;
+                right: 20px;
                 align-items: flex-end;
             }
         }
@@ -1068,9 +1143,9 @@
             background: rgba(13, 21, 39, 0.96);
             border: 1px solid var(--border-focus);
             border-radius: var(--radius-md);
-            padding: 12px 18px;
+            padding: 10px 16px;
             color: #ffffff;
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 600;
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             display: flex;
@@ -1078,7 +1153,7 @@
             gap: 8px;
             pointer-events: auto;
             animation: slideUpToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            max-width: 420px;
+            max-width: 400px;
         }
 
         .toast-bubble.success { border-color: var(--accent-green); }
@@ -1115,34 +1190,18 @@
 </head>
 <body>
 
-    <!-- 🔒 PIN GATING SCREEN -->
+    <!-- 🔒 STEALTH PIN GATING SCREEN -->
     <div id="pinGateOverlay">
         <div class="pin-card">
             <div class="pin-logo-wrap">
-                <img src="https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=FS'" alt="Logo">
+                <img src="logo.png" onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png'" alt="Logo">
             </div>
             <h2>FaceSecur1ty Cloud</h2>
             <p>Admin Boshqaruv Markazi v2.3</p>
             
-            <input type="password" id="pinInput" class="pin-input-field" placeholder="••••••••" maxlength="16" autofocus inputmode="numeric">
+            <input type="password" id="pinInput" class="pin-input-field" placeholder="Admin PIN yoki Parolni kiriting" maxlength="32" autofocus onkeydown="if(event.key==='Enter') verifyMasterPin()">
             
-            <!-- Soft Touch Mobile Keypad for Quick Unlock -->
-            <div class="pin-keypad">
-                <button class="keypad-btn" onclick="appendPinDigit('1')">1</button>
-                <button class="keypad-btn" onclick="appendPinDigit('2')">2</button>
-                <button class="keypad-btn" onclick="appendPinDigit('3')">3</button>
-                <button class="keypad-btn" onclick="appendPinDigit('4')">4</button>
-                <button class="keypad-btn" onclick="appendPinDigit('5')">5</button>
-                <button class="keypad-btn" onclick="appendPinDigit('6')">6</button>
-                <button class="keypad-btn" onclick="appendPinDigit('7')">7</button>
-                <button class="keypad-btn" onclick="appendPinDigit('8')">8</button>
-                <button class="keypad-btn" onclick="appendPinDigit('9')">9</button>
-                <button class="keypad-btn" onclick="clearPinInput()" style="font-size: 14px; color: var(--text-dim);">C</button>
-                <button class="keypad-btn" onclick="appendPinDigit('0')">0</button>
-                <button class="keypad-btn" onclick="backspacePinDigit()" style="font-size: 16px;">⌫</button>
-            </div>
-
-            <button class="pin-action-btn" onclick="verifyMasterPin()">Kirish</button>
+            <button class="pin-action-btn" onclick="verifyMasterPin()">🚀 Tizimga Kirish</button>
             <div id="pinError" class="pin-error-msg">Noto'g'ri PIN parol!</div>
         </div>
     </div>
@@ -1153,7 +1212,7 @@
         <header>
             <div class="header-brand">
                 <div class="brand-icon">
-                    <img src="https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png" onerror="this.onerror=null; this.src='https://via.placeholder.com/32?text=FS'" alt="Logo">
+                    <img src="logo.png" onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/otabek-digital/FaceSecur1ty-Cloud/main/logo.png'" alt="Logo">
                 </div>
                 <div class="brand-titles">
                     <h1>FaceSecur1ty Hub</h1>
@@ -1215,11 +1274,11 @@
             <!-- 2. QUICK 1-CODE CHECK & KEY GENERATOR -->
             <div class="card-quick-keygen">
                 <div class="keygen-top-title">
-                    <h3>⚡ Tezkor 1-Kod (Hardware ID) Kalit Olish</h3>
-                    <span style="font-size: 11.5px; color: var(--text-dim);">Kompyuter bergan kodni kiriting:</span>
+                    <h3>⚡ Tezkor 1-Kod (Hardware / Session ID) Kalit Olish</h3>
+                    <span style="font-size: 11px; color: var(--text-dim);">Kompyuter bergan kodni kiriting:</span>
                 </div>
                 <div class="keygen-inputs-grid">
-                    <input type="text" id="quickHwidInput" class="input-dark" placeholder="1-Kod (masalan: 7A3B-9901 yoki FS-7A3B-9901)" oninput="handleQuickKeygenInput()">
+                    <input type="text" id="quickHwidInput" class="input-dark" placeholder="1-Kod (masalan: FS-7A3B-9901-4K82 yoki 7A3B-9901)" oninput="handleQuickKeygenInput()">
                     <input type="text" id="quickKeyOutput" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
                     <button class="btn-keygen-action" onclick="copyQuickKeyResult()">📋 Nusxalash</button>
                 </div>
@@ -1250,7 +1309,7 @@
                         <span>🧹 Tozalash</span>
                     </button>
                     <button class="btn-add-primary" onclick="openAddDeviceModal()">
-                        <span>➕ Kompyuter Qo'shish</span>
+                        <span>➕ Qo'shish</span>
                     </button>
                 </div>
             </div>
@@ -1293,7 +1352,7 @@
             </div>
             <div class="form-row">
                 <label>1-Kod (Hardware ID)</label>
-                <input type="text" id="devHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901 yoki 7A3B9901">
+                <input type="text" id="devHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901 yoki 7A3B-9901">
             </div>
             <div class="form-row">
                 <label>Kompyuter Nomi / Foydalanuvchi</label>
@@ -1324,14 +1383,29 @@
                 <div class="sheet-title">⚡ 1-Kod Aktivatsiya Generatori</div>
                 <button class="sheet-close-btn" onclick="closeModal('keyGenModal')">&times;</button>
             </div>
+            
+            <!-- Universal 1-Click Key Button -->
+            <button class="btn-universal-keygen" onclick="generateUniversalMasterKey()">
+                <span>🌟 1-Bosishda Universal Kalit Olish (Barcha PC uchun)</span>
+            </button>
+
             <div class="form-row">
-                <label>Kompyuterning 1-Kodi (Hardware ID)</label>
-                <input type="text" id="keyGenHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901" oninput="calculateKeyGen()">
+                <label>Mavjud kompyuterni tanlang (Ixtiyoriy):</label>
+                <select id="keyGenDeviceSelect" class="input-dark" onchange="onSelectDeviceKeyGen(this.value)">
+                    <option value="">-- Kompyuterni tanlang yoki qo'lda kiriting --</option>
+                </select>
             </div>
+
+            <div class="form-row">
+                <label>Kompyuterning 1-Kodi (Hardware / Dynamic ID):</label>
+                <input type="text" id="keyGenHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901-4K82" oninput="calculateKeyGen()">
+            </div>
+
             <div class="form-row">
                 <label>Aktivatsiya Kaliti (Dasturga kiritiladi):</label>
                 <input type="text" id="generatedKeyResult" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
             </div>
+
             <div class="sheet-footer">
                 <button class="btn-glass-chip" onclick="closeModal('keyGenModal')">Yopish</button>
                 <button class="btn-keygen-action" onclick="copyGeneratedKey()">📋 Nusxalash</button>
@@ -1341,7 +1415,7 @@
 
     <!-- MODAL: USED CODES HISTORY -->
     <div id="usedCodesModal" class="modal-backdrop">
-        <div class="modal-sheet" style="max-width: 580px;">
+        <div class="modal-sheet" style="max-width: 560px;">
             <div class="sheet-top">
                 <div class="sheet-title">📜 Ishlatilgan 1-Kodlar Tarixi</div>
                 <button class="sheet-close-btn" onclick="closeModal('usedCodesModal')">&times;</button>
@@ -1362,20 +1436,20 @@
                 <div class="sheet-title">⚙️ Boshqaruv Sozlamalari</div>
                 <button class="sheet-close-btn" onclick="closeModal('mobileSettingsModal')">&times;</button>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
-                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); openGitHubSettingsModal();">
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 12px 14px;" onclick="closeModal('mobileSettingsModal'); openGitHubSettingsModal();">
                     <span>⚙️ GitHub Avto-Sinxronlash</span>
                 </button>
-                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); syncWithGitHub(true);">
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 12px 14px;" onclick="closeModal('mobileSettingsModal'); syncWithGitHub(true);">
                     <span>🔄 Real-Vaqt Sinxronlash</span>
                 </button>
-                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); openPinSettingsModal();">
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 12px 14px;" onclick="closeModal('mobileSettingsModal'); openPinSettingsModal();">
                     <span>🔑 PIN Parolni O'zgartirish</span>
                 </button>
-                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 14px 16px;" onclick="closeModal('mobileSettingsModal'); openDevicesJsonModal();">
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 12px 14px;" onclick="closeModal('mobileSettingsModal'); openDevicesJsonModal();">
                     <span>💾 devices.json Eksport / Import</span>
                 </button>
-                <button class="btn-glass-chip btn-logout" style="justify-content: flex-start; padding: 14px 16px; margin-top: 10px;" onclick="logout()">
+                <button class="btn-glass-chip btn-logout" style="justify-content: flex-start; padding: 12px 14px; margin-top: 8px;" onclick="logout()">
                     <span>🚪 Tizimdan Chiqish</span>
                 </button>
             </div>
@@ -1389,8 +1463,8 @@
                 <div class="sheet-title">⚙️ GitHub Avto-Commit Sozlamalari</div>
                 <button class="sheet-close-btn" onclick="closeModal('gitHubSettingsModal')">&times;</button>
             </div>
-            <p style="font-size: 12.5px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.45;">
-                O'zgarishlar to'g'ridan-to'g'ri GitHub repository dagi <code>devices.json</code> fayliga avto-commit qilinishi mumkin.
+            <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.45;">
+                O'zgarishlar to'g'ridan-to'g'ri GitHub repository dagi <code>devices.json</code> fayliga avto-commit qilinadi.
             </p>
             <div class="form-row">
                 <label>GitHub Repository (Owner/Repo)</label>
@@ -1399,7 +1473,7 @@
             <div class="form-row">
                 <label>GitHub Personal Access Token (PAT) - Ixtiyoriy</label>
                 <input type="password" id="ghTokenInput" class="input-dark" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                <span style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Token faqat sizning brauzeringizda xavfsiz saqlanadi.</span>
+                <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">Token faqat sizning brauzeringizda saqlanadi.</span>
             </div>
             <div class="sheet-footer">
                 <button class="btn-glass-chip" onclick="closeModal('gitHubSettingsModal')">Bekor Qilish</button>
@@ -1410,14 +1484,14 @@
 
     <!-- MODAL: DEVICES.JSON EXPORT / IMPORT -->
     <div id="devicesJsonModal" class="modal-backdrop">
-        <div class="modal-sheet" style="max-width: 600px;">
+        <div class="modal-sheet" style="max-width: 580px;">
             <div class="sheet-top">
                 <div class="sheet-title">💾 devices.json Fayli</div>
                 <button class="sheet-close-btn" onclick="closeModal('devicesJsonModal')">&times;</button>
             </div>
             <div class="form-row">
                 <label>JSON ma'lumotlari:</label>
-                <textarea id="devicesJsonArea" class="input-dark" rows="10" style="font-family: var(--font-mono); font-size: 11.5px;"></textarea>
+                <textarea id="devicesJsonArea" class="input-dark" rows="10" style="font-family: var(--font-mono); font-size: 11px;"></textarea>
             </div>
             <div class="sheet-footer" style="flex-wrap: wrap;">
                 <button class="btn-glass-chip" onclick="copyDevicesJson()">📋 Nusxalash</button>
@@ -1454,7 +1528,7 @@
 
     <script>
         // ==========================================
-        // 1. DYNAMIC SECURITY, ANTI-INSPECT & SECRETS
+        // 1. STEALTH & ANTI-INSPECT PROTECTION
         // ==========================================
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
@@ -1466,7 +1540,6 @@
             }
         });
 
-        // Dynamic secret reconstruction
         const _0xM = [70,97,99,101,83,101,99,117,114,105,116,121,95,79,116,97,98,101,107,95,77,97,115,116,101,114,95,50,48,50,54,95,83,101,99,114,101,116,83,97,108,116,95,33,120,57,57];
         function _getMS() {
             return String.fromCharCode.apply(null, _0xM);
@@ -1734,7 +1807,7 @@
 
         function saveToLocalStorageAndCloud() {
             localStorage.setItem('fss_cloud_db_v3', JSON.stringify(cloudDatabase, null, 2));
-            _ = pushToGitHubAsync(cloudDatabase);
+            pushToGitHubAsync(cloudDatabase);
         }
 
         async function syncWithGitHub(showToastMsg = true) {
@@ -1769,7 +1842,7 @@
         }
 
         // ==========================================
-        // 3. SECURE DERIVED TOPICS & REALTIME DISCOVERY
+        // 3. SECURE CHANNELS & REALTIME DISCOVERY
         // ==========================================
         async function getSecureCommandChannel(machineCode) {
             const clean = cleanMachineCode(machineCode);
@@ -1802,7 +1875,6 @@
             const ver = info.ver || 'v2.3';
             const ts = info.ts;
 
-            // Strict HMAC signature check for authenticity
             if (info.sig && ts) {
                 const ms = _getMS();
                 const fullCode = info.code || (`FS-${clean}`);
@@ -1894,7 +1966,6 @@
             const ts = Math.floor(Date.now() / 1000);
             const ms = _getMS();
 
-            // Signed payload
             const sig = await hmacSha256(ms, `${cmdStr}|${ts}`);
             const signedPayload = `CMD:${cmdStr}|SIG:${sig}|TS:${ts}`;
             const rawPayload = `${cmdStr}|${ts}|${sig}`;
@@ -2023,11 +2094,44 @@
             });
         }
 
+        function populateKeyGenDeviceDropdown(selectedVal = '') {
+            const select = document.getElementById('keyGenDeviceSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Kompyuterni tanlang yoki qo\'lda kiriting --</option>';
+            const devs = cloudDatabase.devices || {};
+            for (const k in devs) {
+                if (k === 'FS-GLOBAL') continue;
+                const opt = document.createElement('option');
+                opt.value = k;
+                opt.text = `${devs[k].pc_name || k} (${k}) - ${devs[k].school || 'Maktab'}`;
+                if (k === selectedVal) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        function onSelectDeviceKeyGen(val) {
+            if (!val) return;
+            document.getElementById('keyGenHwid').value = val;
+            calculateKeyGen();
+        }
+
+        function generateUniversalMasterKey() {
+            // Generates universal activation key for any computer
+            const univKey = generateRemoteActivationKeySync("FS-GLOBAL");
+            document.getElementById('keyGenHwid').value = "FS-GLOBAL (Universal Barcha PC)";
+            document.getElementById('generatedKeyResult').value = univKey;
+            showToast("🌟 Universal aktivatsiya kaliti yaratildi!", "success");
+        }
+
         function openKeyGenModal(prefillHwid = '') {
+            populateKeyGenDeviceDropdown(prefillHwid);
             document.getElementById('keyGenHwid').value = prefillHwid || '';
             document.getElementById('keyGenModal').style.display = 'flex';
-            calculateKeyGen();
-            if (!prefillHwid) document.getElementById('keyGenHwid').focus();
+            if (prefillHwid) {
+                calculateKeyGen();
+            } else {
+                generateUniversalMasterKey();
+            }
         }
 
         function calculateKeyGen() {
@@ -2081,15 +2185,15 @@
                 keys.reverse().forEach(k => {
                     const item = used[k];
                     const row = document.createElement('div');
-                    row.style.cssText = 'background: rgba(0,0,0,0.35); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;';
+                    row.style.cssText = 'background: rgba(0,0,0,0.35); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 6px;';
                     row.innerHTML = `
                         <div style="overflow: hidden;">
-                            <div style="font-weight: bold; color: var(--primary); font-family: var(--font-mono); font-size: 13px;">${item.hwid || k}</div>
-                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 3px; word-break: break-all;">Kalit: <span style="color: var(--accent-green); font-family: var(--font-mono);">${item.key || ''}</span></div>
+                            <div style="font-weight: bold; color: var(--primary); font-family: var(--font-mono); font-size: 12px;">${item.hwid || k}</div>
+                            <div style="font-size: 10.5px; color: var(--text-dim); margin-top: 2px; word-break: break-all;">Kalit: <span style="color: var(--accent-green); font-family: var(--font-mono);">${item.key || ''}</span></div>
                         </div>
                         <div style="text-align: right; flex-shrink: 0;">
-                            <span style="font-size: 10px; color: var(--accent-yellow); background: rgba(245,158,11,0.12); padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.3);">Bir martalik</span>
-                            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">${new Date(item.used_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                            <span style="font-size: 9.5px; color: var(--accent-yellow); background: rgba(245,158,11,0.12); padding: 2px 5px; border-radius: 4px; border: 1px solid rgba(245,158,11,0.3);">Bir martalik</span>
+                            <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 3px;">${new Date(item.used_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
                         </div>
                     `;
                     container.appendChild(row);
@@ -2101,12 +2205,19 @@
         // ==========================================
         // 6. UI RENDERING & CONTROLS
         // ==========================================
+        function copyCardKey(keyVal, hwid) {
+            if (!keyVal) return;
+            navigator.clipboard.writeText(keyVal).then(() => {
+                showToast(`✅ Aktivatsiya kaliti nusxalandi! (${hwid})`, "success");
+                markCodeAsUsed(hwid, keyVal);
+            });
+        }
+
         function renderDeviceList() {
             const grid = document.getElementById('devicesGrid');
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             grid.innerHTML = '';
 
-            // Update Global badge
             const globStatus = cloudDatabase.global?.status || 'ACTIVE';
             const badge = document.getElementById('globalStatusBadge');
             const badgeText = document.getElementById('globalStatusText');
@@ -2146,9 +2257,9 @@
                 grid.innerHTML = `
                     <div class="empty-devices-placeholder">
                         <div class="icon">🖥️</div>
-                        <h3 style="font-size: 15px; margin-bottom: 4px; font-weight: 700;">Kompyuterlar topilmadi</h3>
-                        <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 14px;">FaceSecurity dasturi ishga tushishi bilan ular ushbu ro'yxatda avtomatik ko'rinadi.</p>
-                        <button class="btn-add-primary" style="margin: 0 auto;" onclick="openAddDeviceModal()">➕ Kompyuter Qo'shish</button>
+                        <h3 style="font-size: 14px; margin-bottom: 4px; font-weight: 700;">Kompyuterlar topilmadi</h3>
+                        <p style="font-size: 11.5px; color: var(--text-dim); margin-bottom: 12px;">FaceSecurity dasturi ishga tushishi bilan ular ushbu ro'yxatda avtomatik ko'rinadi.</p>
+                        <button class="btn-add-primary" style="margin: 0 auto;" onclick="openAddDeviceModal()">➕ Qo'shish</button>
                     </div>
                 `;
                 return;
@@ -2161,6 +2272,7 @@
                 card.className = `device-card-item ${isBlocked ? 'blocked' : ''}`;
 
                 const updatedTime = d.updated_at ? new Date(d.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Hozir';
+                const actKey = generateRemoteActivationKeySync(k);
 
                 card.innerHTML = `
                     <div class="card-top-row">
@@ -2179,12 +2291,21 @@
 
                     <div class="device-details-box">
                         <div class="detail-item-row">
-                            <span class="lbl">1-Kod (Hardware ID):</span>
+                            <span class="lbl">1-Kod (ID):</span>
                             <span class="val-hwid">${k}</span>
                         </div>
                         <div class="detail-item-row">
-                            <span class="lbl">Oxirgi faollik:</span>
-                            <span style="font-size: 11px; color: var(--text-dim);">${updatedTime}</span>
+                            <span class="lbl">Faollik:</span>
+                            <span style="font-size: 10.5px; color: var(--text-dim);">${updatedTime}</span>
+                        </div>
+                    </div>
+
+                    <!-- 🔑 Kalit Box: Har bir kompyuter uchun tayyor aktivatsiya kaliti -->
+                    <div class="card-key-box">
+                        <span class="key-label">🔑 Aktivatsiya Kaliti (Dasturga kiritiladi):</span>
+                        <div class="key-field-row">
+                            <span class="key-text-val">${actKey || 'FS-ACT-GENERATING...'}</span>
+                            <button class="btn-copy-mini" onclick="copyCardKey('${actKey}', '${k}')" title="Kalitni nusxalash">📋 Nusxalash</button>
                         </div>
                     </div>
 
@@ -2193,10 +2314,10 @@
                             ${isBlocked ? '🔓 Ochish' : '🔒 Qulflash'}
                         </button>
                         <button class="btn-card-action btn-card-keygen" onclick="openKeyGenModal('${k}')">
-                            ⚡ Kalit Olish
+                            ⚡ Generator
                         </button>
                         <button class="btn-card-action btn-delete-ghost" onclick="deleteDevice('${k}')">
-                            🗑️ Ro'yxatdan O'chirish
+                            🗑️ O'chirish
                         </button>
                     </div>
                 `;
