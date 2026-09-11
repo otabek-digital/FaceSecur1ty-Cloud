@@ -2028,15 +2028,34 @@
                     processRawDiscoveryMessage(e.data);
                 };
 
-                // 3. Periodic fast poller (every 4 seconds)
+                // 3. Periodic fast poller (every 2.5 seconds)
                 setInterval(() => {
                     fetchRecentDiscoveredDevices();
-                }, 4000);
+                }, 2500);
             } catch(e) {}
         }
 
         async function fetchRecentDiscoveredDevices() {
             try {
+                // 0. Check Local HTTP server (0ms direct discovery if running locally)
+                try {
+                    fetch('http://127.0.0.1:58742/status')
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.hwid) {
+                                registerDiscoveredDevice({
+                                    code: data.hwid,
+                                    clean: data.clean,
+                                    name: data.name,
+                                    school: data.school,
+                                    status: data.status,
+                                    ver: data.ver
+                                });
+                            }
+                        })
+                        .catch(() => {});
+                } catch(e) {}
+
                 const secReg = await getSecureRegistryChannel();
                 const u1 = `https://ntfy.sh/${secReg}/json?poll=1&since=24h`;
                 const u2 = `https://ntfy.sh/fss_registry_v23/json?poll=1&since=24h`;
@@ -2096,6 +2115,20 @@
             const sig = await hmacSha256(ms, `${cmdStr}|${ts}`);
             const signedPayload = `CMD:${cmdStr}|SIG:${sig}|TS:${ts}`;
             const rawPayload = `${cmdStr}|${ts}|${sig}`;
+
+            // 0. Instant Local HTTP Relay (0ms latency if running on this PC)
+            try {
+                fetch('http://127.0.0.1:58742/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmdStr, ts, sig, payload: signedPayload })
+                }).catch(() => {});
+                fetch('http://localhost:58742/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmdStr, ts, sig, payload: signedPayload })
+                }).catch(() => {});
+            } catch(e) {}
 
             const channels = [];
             if (targetHwid === 'GLOBAL' || targetHwid === 'FS-GLOBAL') {
