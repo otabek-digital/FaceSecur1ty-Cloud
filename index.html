@@ -1726,8 +1726,8 @@
             updated_at: new Date().toISOString(),
             description: "FaceSecurity School Universal Cloud Hub v2.3 - otabek-digital",
             master_auth: {
-                username: "admin",
-                password: "admin",
+                username: "Otabek",
+                password: "sizning_maxfiy_parolingiz",
                 updated_at: new Date().toISOString()
             },
             global: {
@@ -1735,7 +1735,15 @@
                 updated_at: new Date().toISOString()
             },
             blacklist: [],
-            devices: {},
+            devices: {
+                "FS-72CA-5CFA": {
+                    pc_name: "TECHESHERALI",
+                    school: "Maktab",
+                    status: "ACTIVE",
+                    ver: "v2.3",
+                    updated_at: new Date().toISOString()
+                }
+            },
             used_codes: {}
         };
 
@@ -1840,7 +1848,21 @@
             const saved = localStorage.getItem('fss_cloud_db_v3');
             if (saved) {
                 try {
-                    cloudDatabase = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    if (parsed) {
+                        cloudDatabase = { ...cloudDatabase, ...parsed };
+                        if (!cloudDatabase.devices || Object.keys(cloudDatabase.devices).length === 0) {
+                            cloudDatabase.devices = {
+                                "FS-72CA-5CFA": {
+                                    pc_name: "TECHESHERALI",
+                                    school: "Maktab",
+                                    status: "ACTIVE",
+                                    ver: "v2.3",
+                                    updated_at: new Date().toISOString()
+                                }
+                            };
+                        }
+                    }
                 } catch(e) {}
             }
         }
@@ -2394,36 +2416,74 @@
             return res;
         }
 
-        function advanceDeviceSession(hwid) {
+        function getDeviceActiveKey(hwid) {
+            const dev = cloudDatabase.devices && cloudDatabase.devices[hwid];
+            const salt = (dev && dev.key_salt) ? dev.key_salt : null;
             const clean = cleanMachineCode(hwid);
-            if (clean.length < 8) return hwid;
             const base8 = clean.substring(0, 8);
-            const newSuffix = generateRandomSessionCode(4);
-            const newHwid = `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${newSuffix}`;
             
-            if (cloudDatabase.devices && cloudDatabase.devices[hwid]) {
-                const devData = cloudDatabase.devices[hwid];
-                delete cloudDatabase.devices[hwid];
-                cloudDatabase.devices[newHwid] = {
-                    ...devData,
-                    updated_at: new Date().toISOString()
-                };
-                saveToLocalStorageAndCloud();
-                renderDeviceList();
+            if (window.CryptoJS && CryptoJS.HmacSHA256) {
+                const ms = _getMS();
+                if (!salt || salt === 'BASE') {
+                    const hmac = CryptoJS.HmacSHA256(base8 + "_ACTIVATED", ms);
+                    const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
+                    return `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${signHex}`;
+                } else {
+                    const hmac = CryptoJS.HmacSHA256(base8 + "_" + salt + "_ACTIVATED", ms);
+                    const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
+                    return `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${salt}-${signHex}`;
+                }
             }
-            return newHwid;
+            return `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-B3B70A19`;
         }
 
-        // ==========================================
-        // 6. UI RENDERING & CONTROLS
-        // ==========================================
-        function copyCardKey(keyVal, hwid) {
+        function advanceDeviceKey(hwid) {
+            if (cloudDatabase.devices && cloudDatabase.devices[hwid]) {
+                const dev = cloudDatabase.devices[hwid];
+                dev.key_salt = generateRandomSessionCode(4);
+                dev.updated_at = new Date().toISOString();
+                saveToLocalStorageAndCloud();
+                renderDeviceList();
+                return getDeviceActiveKey(hwid);
+            }
+            return "";
+        }
+
+        function copyCardKey(hwid) {
+            const keyVal = getDeviceActiveKey(hwid);
             if (!keyVal) return;
             navigator.clipboard.writeText(keyVal).then(() => {
                 markCodeAsUsed(hwid, keyVal);
-                advanceDeviceSession(hwid);
-                showToast(`✅ Kalit nusxalandi va ishlatildi! Ushbu PC uchun navbatdagi yangi kalit hosil qilindi!`, "success");
+                advanceDeviceKey(hwid);
+                showToast(`✅ Kalit nusxalandi! Ushbu kompyuter uchun navbatdagi yangi kalit tayyorlandi!`, "success");
             });
+        }
+
+        function toggleDeviceStatus(hwid) {
+            const dev = cloudDatabase.devices[hwid];
+            if (!dev) return;
+
+            const isCurrentlyBlocked = (dev.status !== 'ACTIVE');
+            const newStatus = isCurrentlyBlocked ? 'ACTIVE' : 'BLOCKED';
+            const currentKey = getDeviceActiveKey(hwid);
+            
+            dev.status = newStatus;
+            dev.updated_at = new Date().toISOString();
+
+            if (isCurrentlyBlocked) {
+                markCodeAsUsed(hwid, currentKey);
+                dev.key_salt = generateRandomSessionCode(4);
+                saveToLocalStorageAndCloud();
+                renderDeviceList();
+                broadcastRemoteCommand(hwid, 'UNLOCK');
+                showToast(`🔓 ${dev.pc_name || hwid} masofadan OCHILDI va keyingi yangi kalit tayyorlandi!`, "success");
+            } else {
+                dev.key_salt = generateRandomSessionCode(4);
+                saveToLocalStorageAndCloud();
+                renderDeviceList();
+                broadcastRemoteCommand(hwid, 'LOCK');
+                showToast(`🔒 ${dev.pc_name || hwid} masofadan QULFLANDI!`, "error");
+            }
         }
 
         function renderDeviceList() {
@@ -2478,15 +2538,6 @@
                 return;
             }
 
-            // Universal key calculation
-            const ms = _getMS();
-            let universalKey = "";
-            if (window.CryptoJS && CryptoJS.HmacSHA256) {
-                const hmac = CryptoJS.HmacSHA256("GLOBAL00_ACTIVATED", ms);
-                const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                universalKey = `FS-ACT-GLOBAL-${signHex}`;
-            }
-
             filteredKeys.forEach(k => {
                 const d = devices[k];
                 const isAttack = (d.status === 'ATTACK_DETECTED' || d.status === 'TAMPERED');
@@ -2501,17 +2552,7 @@
                 card.className = cardClass;
 
                 const updatedTime = d.updated_at ? new Date(d.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Hozir';
-                
-                // Key 1: Dynamic Session Key (Unique every time app locks/restarts)
-                const key1 = generateRemoteActivationKeySync(k);
-
-                // Key 2: Hardware Backup Key
-                const clean = cleanMachineCode(k);
-                const baseHardwareCode = clean.substring(0, 8);
-                const key2 = generateRemoteActivationKeySync(baseHardwareCode);
-
-                // Key 3: Universal Master Key
-                const key3 = universalKey || "FS-ACT-GLOBAL-MASTER";
+                const activeKey = getDeviceActiveKey(k);
 
                 card.innerHTML = `
                     <div class="card-top-row">
@@ -2528,9 +2569,9 @@
                         </div>
                     </div>
 
-                    <div class="device-details-box">
+                    <div class="device-details-box" style="margin-top: 6px;">
                         <div class="detail-item-row">
-                            <span class="lbl">Kompyuter Kodi (1-Kod):</span>
+                            <span class="lbl">Kompyuter Kodi (HWID):</span>
                             <span class="val-hwid" style="font-size: 13px; color: var(--primary); font-weight: 800;">${k}</span>
                         </div>
                         <div class="detail-item-row">
@@ -2539,53 +2580,21 @@
                         </div>
                     </div>
 
-                    <!-- 🔑 3-DARAJALI KALITLAR BLOKI (1-Kalit Sessiya, 2-Kalit Zaxira, 3-Kalit Universal) -->
-                    <div class="card-key-box" style="display: flex; flex-direction: column; gap: 7px; margin-top: 10px;">
-                        
-                        <!-- 1-KALIT: DINAMIK BIR MARTALIK SESSIYA KALITI -->
-                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9px; padding: 7px 10px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                                <span style="font-size: 10.5px; font-weight: 800; color: #10b981;">🔑 1-KALIT (Joriy Sessiya Kaliti):</span>
-                                <span style="font-size: 9px; color: #10b981; background: rgba(16, 185, 129, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Tavsiya etiladi</span>
-                            </div>
-                            <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #fff; font-weight: 800; overflow-x:auto;">${key1}</span>
-                                <button class="btn-copy-mini" onclick="copyCardKey('${key1}', '${k}')" title="1-Kalitni nusxalash">📋 Nusxalash</button>
-                            </div>
+                    <!-- 🔑 BITTA TOZA VA ANIQ BIR MARTALIK KALIT QUTISI -->
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 12px; margin-top: 10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <span style="font-size: 11px; font-weight: 800; color: #10b981;">🔑 Joriy Bir Martalik Kalit:</span>
+                            <span style="font-size: 9px; color: #10b981; background: rgba(16, 185, 129, 0.2); padding: 2px 6px; border-radius: 4px; font-weight: bold;">Bir Martalik</span>
                         </div>
-
-                        <!-- 2-KALIT: APPARAT ZAXIRA KALITI -->
-                        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 9px; padding: 7px 10px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                                <span style="font-size: 10.5px; font-weight: 800; color: #38bdf8;">🛡️ 2-KALIT (Zaxira Hardware Kaliti):</span>
-                                <span style="font-size: 9px; color: #38bdf8; background: rgba(56, 189, 248, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Zaxira</span>
-                            </div>
-                            <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #93c5fd; font-weight: 800; overflow-x:auto;">${key2}</span>
-                                <button class="btn-copy-mini" onclick="copyCardKey('${key2}', '${k}')" title="2-Kalitni nusxalash">📋 Nusxalash</button>
-                            </div>
+                        <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <span class="key-text-val" style="font-size: 12px; font-family: var(--font-mono); color: #fff; font-weight: 800; overflow-x:auto;">${activeKey}</span>
+                            <button class="btn-copy-mini" onclick="copyCardKey('${k}')" title="Kalitni nusxalash va yangilash">📋 Nusxalash</button>
                         </div>
-
-                        <!-- 3-KALIT: BIR MARTALIK UNIVERSAL KALIT -->
-                        <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 9px; padding: 7px 10px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                                <span style="font-size: 10.5px; font-weight: 800; color: #c084fc;">⚡ 3-KALIT (Bir Martalik Universal Kalit):</span>
-                                <span style="font-size: 9px; color: #c084fc; background: rgba(192, 132, 252, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Barcha PC (1-Martalik)</span>
-                            </div>
-                            <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #e9d5ff; font-weight: 800; overflow-x:auto;">${getNextMasterKey()}</span>
-                                <button class="btn-copy-mini" onclick="copyAndAdvanceMasterKey()" title="Nusxalash va keyingi kalitga o'tish">📋 Nusxalash & Yangilash</button>
-                            </div>
-                        </div>
-
                     </div>
 
-                    <div class="device-action-buttons" style="margin-top: 10px;">
+                    <div class="device-action-buttons" style="margin-top: 12px;">
                         <button class="btn-card-action btn-toggle-status" onclick="toggleDeviceStatus('${k}')">
                             ${isBlocked ? '🔓 Ochish' : '🔒 Qulflash'}
-                        </button>
-                        <button class="btn-card-action btn-card-keygen" onclick="openKeyGenModal('${k}')">
-                            ⚡ Generator
                         </button>
                         <button class="btn-card-action btn-delete-ghost" onclick="deleteDevice('${k}')">
                             🗑️ O'chirish
