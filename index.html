@@ -1853,27 +1853,45 @@
         async function syncWithGitHub(showToastMsg = true) {
             try {
                 const repo = getGitHubRepo();
-                const rawUrl = `https://raw.githubusercontent.com/${repo}/main/devices.json?_=${Date.now()}`;
-                const resp = await fetch(rawUrl);
-                if (resp.ok) {
-                    const data = await resp.json();
-                    if (data && typeof data === 'object') {
-                        if (data.master_auth) cloudDatabase.master_auth = data.master_auth;
-                        if (data.global) cloudDatabase.global = data.global;
-                        if (data.blacklist) cloudDatabase.blacklist = data.blacklist;
-                        if (data.used_codes) {
-                            cloudDatabase.used_codes = { ...cloudDatabase.used_codes, ...data.used_codes };
-                        }
-                        if (data.devices) {
-                            for (const k in data.devices) {
-                                if (k !== 'FS-GLOBAL' && !cloudDatabase.devices[k]) {
-                                    cloudDatabase.devices[k] = data.devices[k];
-                                }
+                const owner = repo.split('/')[0];
+                const repoName = repo.split('/')[1];
+                const candidateUrls = [
+                    `https://raw.githubusercontent.com/${repo}/master/devices.json?_=${Date.now()}`,
+                    `https://raw.githubusercontent.com/${repo}/main/devices.json?_=${Date.now()}`,
+                    `https://${owner}.github.io/${repoName}/devices.json?_=${Date.now()}`,
+                    `devices.json?_=${Date.now()}`
+                ];
+                let fetchedData = null;
+                for (const url of candidateUrls) {
+                    try {
+                        const resp = await fetch(url);
+                        if (resp.ok) {
+                            const d = await resp.json();
+                            if (d && typeof d === 'object') {
+                                fetchedData = d;
+                                break;
                             }
                         }
-                        localStorage.setItem('fss_cloud_db_v3', JSON.stringify(cloudDatabase, null, 2));
-                        if (showToastMsg) showToast("GitHub bilan muvaffaqiyatli sinxronlandi!", "success");
+                    } catch(e) {}
+                }
+
+                if (fetchedData) {
+                    const data = fetchedData;
+                    if (data.master_auth) cloudDatabase.master_auth = data.master_auth;
+                    if (data.global) cloudDatabase.global = data.global;
+                    if (data.blacklist) cloudDatabase.blacklist = data.blacklist;
+                    if (data.used_codes) {
+                        cloudDatabase.used_codes = { ...cloudDatabase.used_codes, ...data.used_codes };
                     }
+                    if (data.devices) {
+                        for (const k in data.devices) {
+                            if (k !== 'FS-GLOBAL') {
+                                cloudDatabase.devices[k] = { ...(cloudDatabase.devices[k] || {}), ...data.devices[k] };
+                            }
+                        }
+                    }
+                    localStorage.setItem('fss_cloud_db_v3', JSON.stringify(cloudDatabase, null, 2));
+                    if (showToastMsg) showToast("GitHub bilan muvaffaqiyatli sinxronlandi!", "success");
                 }
             } catch(e) {
                 if (showToastMsg) showToast("Lokal ma'lumotlar bilan ishlash davom etmoqda", "info");
@@ -2014,7 +2032,23 @@
                     } catch(e) {}
                 };
 
-                await Promise.all([handleResp(u1), handleResp(u2)]);
+                // Primary: ntfy.sh (may be blocked on some networks)
+                await Promise.all([handleResp(u1), handleResp(u2)]).catch(() => {});
+
+                // Fallback: dweet.io (works even when ntfy.sh is blocked)
+                try {
+                    const dweetResp = await fetch('https://dweet.io/get/dweets/for/fss-registry-v23');
+                    if (dweetResp.ok) {
+                        const dweetData = await dweetResp.json();
+                        if (dweetData && Array.isArray(dweetData.with)) {
+                            for (const d of dweetData.with) {
+                                if (d && d.content) {
+                                    registerDiscoveredDevice(d.content);
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
             } catch(e) {}
         }
 
@@ -2072,6 +2106,18 @@
                     }).catch(() => {});
                 } catch(e) {}
             }
+
+            // Dweet.io fallback (works even when ntfy.sh is blocked)
+            try {
+                const dweetThing = (targetHwid === 'GLOBAL' || targetHwid === 'FS-GLOBAL')
+                    ? 'fss-cmd-global'
+                    : `fss-cmd-${cleanBase.toLowerCase()}`;
+                fetch(`https://dweet.io/dweet/for/${dweetThing}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmdStr, ts, sig, payload: signedPayload })
+                }).catch(() => {});
+            } catch(e) {}
         }
 
         function setGlobalStatus(status) {
@@ -2101,12 +2147,14 @@
 
             if (newStatus === 'ACTIVE') {
                 markCodeAsUsed(hwid, "REMOTE_UNLOCK");
+                advanceDeviceSession(hwid);
+            } else {
+                saveToLocalStorageAndCloud();
+                renderDeviceList();
             }
 
-            saveToLocalStorageAndCloud();
             broadcastRemoteCommand(hwid, newStatus === 'ACTIVE' ? 'UNLOCK' : 'LOCK');
-            renderDeviceList();
-            showToast(`${dev.pc_name || hwid}: ${newStatus === 'ACTIVE' ? 'OCHILDI (ACTIVE) & 1-Kod ishlatildi!' : 'QULFLANDI (BLOCKED)'}!`, newStatus === 'ACTIVE' ? 'success' : 'error');
+            showToast(`${dev.pc_name || hwid}: ${newStatus === 'ACTIVE' ? 'OCHILDI (ACTIVE) & Yangi kalit tayyorlandi!' : 'QULFLANDI (BLOCKED)'}!`, newStatus === 'ACTIVE' ? 'success' : 'error');
         }
 
         function deleteDevice(hwid) {
@@ -2142,7 +2190,7 @@
                     const sessCode = clean.substring(0, 12);
                     const hmac = CryptoJS.HmacSHA256(sessCode + "_ACTIVATED", ms);
                     const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                    return `FS-ACT-${sessCode.substring(0, 4)}-${sessCode.substring(4, 8)}-${sessCode.substring(8, 12)}-${signHex}`;
+                    return `FS-${sessCode.substring(0, 4)}-${sessCode.substring(4, 8)}-${sessCode.substring(8, 12)}-${signHex}`;
                 }
                 
                 // 2. 8-belgili doimiy apparat kodi (FS-615E-3FAA -> 615E3FAA)
@@ -2150,58 +2198,58 @@
                 const shortCode = clean.substring(0, 8);
                 const hmac = CryptoJS.HmacSHA256(shortCode + "_ACTIVATED", ms);
                 const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                return `FS-ACT-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
+                return `FS-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
             }
             return "";
         }
 
         // ==========================================
-        // ROLLING ONE-TIME MASTER KEY ENGINE
+        // DYNAMIC ONE-TIME MASTER KEY ENGINE (NO SEQUENTIAL NUMBERS)
         // ==========================================
-        function generateRollingMasterKeySync(epoch) {
-            if (!epoch || epoch < 1) epoch = 1;
-            const epochCode = String(epoch).padStart(4, '0');
+        function generateRandomMasterKeySync(customSalt = null) {
+            const salt = customSalt || generateRandomSessionCode(4);
             if (window.CryptoJS && CryptoJS.HmacSHA256) {
                 const ms = _getMS();
-                const hmac = CryptoJS.HmacSHA256("MASTER_ROLLING_EPOCH_" + epochCode, ms);
+                const hmac = CryptoJS.HmacSHA256("MASTER_HASH_KEY_" + salt, ms);
                 const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                return `FS-ACT-MASTER-${epochCode}-${signHex}`;
+                return `FS-MST-${salt}-${signHex}`;
             }
             return "";
         }
 
-        function getNextRollingMasterKey() {
-            if (!cloudDatabase.master_epoch) cloudDatabase.master_epoch = 1;
-            return generateRollingMasterKeySync(cloudDatabase.master_epoch);
+        function getNextMasterKey() {
+            if (!cloudDatabase.current_master_salt) {
+                cloudDatabase.current_master_salt = generateRandomSessionCode(4);
+                saveToLocalStorageAndCloud();
+            }
+            return generateRandomMasterKeySync(cloudDatabase.current_master_salt);
         }
 
         function updateQuickKeygenUI() {
-            if (!cloudDatabase.master_epoch) cloudDatabase.master_epoch = 1;
+            const currentKey = getNextMasterKey();
             const epochBadge = document.getElementById('rollingEpochBadge');
             const rollingOut = document.getElementById('quickRollingOutput');
-            const currentKey = getNextRollingMasterKey();
-            if (epochBadge) epochBadge.innerText = `Kalit #${String(cloudDatabase.master_epoch).padStart(4, '0')}`;
+            if (epochBadge) epochBadge.innerText = `Universal Bir Martalik`;
             if (rollingOut) rollingOut.value = currentKey;
         }
 
-        function advanceRollingMasterKey() {
-            if (!cloudDatabase.master_epoch) cloudDatabase.master_epoch = 1;
-            cloudDatabase.master_epoch++;
+        function advanceMasterKey() {
+            cloudDatabase.current_master_salt = generateRandomSessionCode(4);
             saveToLocalStorageAndCloud();
             renderDeviceList();
             updateQuickKeygenUI();
-            const newKey = getNextRollingMasterKey();
-            showToast(`⚡ Yangi navbatdagi kalit #${String(cloudDatabase.master_epoch).padStart(4, '0')} hosil qilindi!`, "success");
+            const newKey = getNextMasterKey();
+            showToast(`⚡ Yangi universal kalit hosil qilindi!`, "success");
             return newKey;
         }
 
-        function copyAndAdvanceRollingKey() {
-            const currentKey = getNextRollingMasterKey();
-            const currentEpoch = cloudDatabase.master_epoch || 1;
+        function copyAndAdvanceMasterKey() {
+            const currentKey = getNextMasterKey();
+            const currentSalt = cloudDatabase.current_master_salt || 'MST0';
             navigator.clipboard.writeText(currentKey).then(() => {
-                showToast(`✅ Bir martalik kalit #${String(currentEpoch).padStart(4, '0')} nusxalandi! Navbatdagi kalit tayyorlanmoqda...`, "success");
-                markCodeAsUsed(`MASTER_EPOCH_${currentEpoch}`, currentKey);
-                advanceRollingMasterKey();
+                showToast(`✅ Bir martalik kalit nusxalandi! Navbatdagi yangi kalit tayyorlandi!`, "success");
+                markCodeAsUsed(`MASTER_${currentSalt}`, currentKey);
+                advanceMasterKey();
             });
         }
 
@@ -2337,14 +2385,44 @@
             document.getElementById('usedCodesModal').style.display = 'flex';
         }
 
+        function generateRandomSessionCode(len = 4) {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let res = "";
+            for (let i = 0; i < len; i++) {
+                res += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return res;
+        }
+
+        function advanceDeviceSession(hwid) {
+            const clean = cleanMachineCode(hwid);
+            if (clean.length < 8) return hwid;
+            const base8 = clean.substring(0, 8);
+            const newSuffix = generateRandomSessionCode(4);
+            const newHwid = `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${newSuffix}`;
+            
+            if (cloudDatabase.devices && cloudDatabase.devices[hwid]) {
+                const devData = cloudDatabase.devices[hwid];
+                delete cloudDatabase.devices[hwid];
+                cloudDatabase.devices[newHwid] = {
+                    ...devData,
+                    updated_at: new Date().toISOString()
+                };
+                saveToLocalStorageAndCloud();
+                renderDeviceList();
+            }
+            return newHwid;
+        }
+
         // ==========================================
         // 6. UI RENDERING & CONTROLS
         // ==========================================
         function copyCardKey(keyVal, hwid) {
             if (!keyVal) return;
             navigator.clipboard.writeText(keyVal).then(() => {
-                showToast(`✅ Aktivatsiya kaliti nusxalandi! (${hwid})`, "success");
                 markCodeAsUsed(hwid, keyVal);
+                advanceDeviceSession(hwid);
+                showToast(`✅ Kalit nusxalandi va ishlatildi! Ushbu PC uchun navbatdagi yangi kalit hosil qilindi!`, "success");
             });
         }
 
@@ -2488,15 +2566,15 @@
                             </div>
                         </div>
 
-                        <!-- 3-KALIT: BIR MARTALIK AYLANUVCHI MASTER KALIT -->
+                        <!-- 3-KALIT: BIR MARTALIK UNIVERSAL KALIT -->
                         <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 9px; padding: 7px 10px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                                <span style="font-size: 10.5px; font-weight: 800; color: #c084fc;">⚡ 3-KALIT (Navbatdagi Bir Martalik Master Kalit #${String(cloudDatabase.master_epoch || 1).padStart(4, '0')}):</span>
+                                <span style="font-size: 10.5px; font-weight: 800; color: #c084fc;">⚡ 3-KALIT (Bir Martalik Universal Kalit):</span>
                                 <span style="font-size: 9px; color: #c084fc; background: rgba(192, 132, 252, 0.18); padding: 1px 5px; border-radius: 4px; font-weight: bold;">Barcha PC (1-Martalik)</span>
                             </div>
                             <div class="key-field-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #e9d5ff; font-weight: 800; overflow-x:auto;">${getNextRollingMasterKey()}</span>
-                                <button class="btn-copy-mini" onclick="copyAndAdvanceRollingKey()" title="Nusxalash va keyingi kalitga o'tish">📋 Nusxalash & Yangilash</button>
+                                <span class="key-text-val" style="font-size: 11.5px; font-family: var(--font-mono); color: #e9d5ff; font-weight: 800; overflow-x:auto;">${getNextMasterKey()}</span>
+                                <button class="btn-copy-mini" onclick="copyAndAdvanceMasterKey()" title="Nusxalash va keyingi kalitga o'tish">📋 Nusxalash & Yangilash</button>
                             </div>
                         </div>
 
