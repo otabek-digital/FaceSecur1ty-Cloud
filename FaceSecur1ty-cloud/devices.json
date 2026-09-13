@@ -1,0 +1,29 @@
+{
+  "version": "2.3",
+  "updated_at": "2026-09-12T15:00:00Z",
+  "creator": {
+    "name": "Otabek S.",
+    "telegram": "otabek_digital",
+    "telegram_url": "https://t.me/otabek_digital",
+    "channel": "https://t.me/facesecurity",
+    "support": "https://t.me/otabek_digital"
+  },
+  "description": "FaceSecurity School Universal Cloud Hub v2.3 - otabek-digital",
+  "global": {
+    "status": "ACTIVE",
+    "note": "Barcha maktablar va kompyuterlarni global boshqarish siyosati"
+  },
+  "blacklist": [
+    "FSS-0000-BANNED"
+  ],
+  "devices": {
+    "FSS-72CA-5CFA": {
+      "pc_name": "TECHESHERALI",
+      "school": "Maktab",
+      "status": "ACTIVE",
+      "ver": "v2.4",
+      "updated_at": "2026-09-14T00:00:00Z"
+    }
+  },
+  "used_codes": {}
+}
