@@ -1230,6 +1230,10 @@
             
             <button class="pin-action-btn" onclick="verifyMasterPin()">🚀 Tizimga Kirish</button>
             <div id="pinError" class="pin-error-msg">Noto'g'ri PIN parol!</div>
+
+            <a id="pinTelegramLink" href="https://t.me/otabek_digital" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-top:14px; font-size:12px; color:#38bdf8; text-decoration:none; padding:7px 14px; background:rgba(14, 165, 233, 0.1); border:1px solid rgba(14, 165, 233, 0.25); border-radius:12px; transition:all 0.2s;">
+                <span>✈️ Admin bilan bog'lanish: t.me/otabek_digital</span>
+            </a>
         </div>
     </div>
 
@@ -1252,6 +1256,9 @@
 
             <!-- Desktop top action menu -->
             <div class="desktop-header-actions">
+                <a id="telegramAdminLink" href="https://t.me/otabek_digital" target="_blank" class="btn-glass-chip" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.45); color: #38bdf8; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>✈️ Bog'lanish: t.me/otabek_digital</span>
+                </a>
                 <div id="githubStatusPill" class="btn-glass-chip active-cloud" onclick="openGitHubSettingsModal()">
                     <span>🌐 Bulut: Real-Vaqt Faol ✅</span>
                 </div>
@@ -1260,6 +1267,9 @@
                 </button>
                 <button class="btn-glass-chip" onclick="openUsedCodesModal()">
                     <span>📜 1-Kodlar Tarixi</span>
+                </button>
+                <button class="btn-glass-chip" onclick="openCreatorSettingsModal()">
+                    <span>✈️ Telegram Aloqa</span>
                 </button>
                 <button class="btn-glass-chip" onclick="openPinSettingsModal()">
                     <span>🔑 PIN O'zgartirish</span>
@@ -1309,16 +1319,16 @@
                 </div>
 
                 <div class="keygen-inputs-grid" style="grid-template-columns: 1fr auto auto; gap: 8px; margin-top: 10px;">
-                    <input type="text" id="quickRollingOutput" class="input-dark result-display" readonly style="font-size: 14px; font-weight: 800; color: #00f2fe; letter-spacing: 0.5px;" value="FS-ACT-MASTER-0001-A49F128C">
+                    <input type="text" id="quickRollingOutput" class="input-dark result-display" readonly style="font-size: 14px; font-weight: 800; color: #00f2fe; letter-spacing: 0.5px;" value="FSS-MST-0001-A49F128C">
                     <button class="btn-keygen-action" onclick="copyAndAdvanceRollingKey()" style="background: linear-gradient(135deg, #00f2fe 0%, #3b82f6 100%); color:#000; font-weight:800;">📋 Nusxalash & Keyingisiga O'tish</button>
                     <button class="btn-glass-chip" onclick="advanceRollingMasterKey()" title="Navbatdagi yangi kalitga o'tish">🔄 Yangilash (+1)</button>
                 </div>
 
                 <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-subtle); display:flex; flex-direction:column; gap:6px;">
-                    <span style="font-size: 11px; color: var(--text-muted); font-weight:600;">🖥️ Yoki ma'lum bir kompyuterning 1-Kodi (FS-XXXX-YYYY-ZZZZ) bo'yicha alohida kalit olish:</span>
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight:600;">🖥️ Yoki ma'lum bir kompyuterning 1-Kodi (FSS-XXXX-YYYY) bo'yicha alohida kalit olish:</span>
                     <div style="display:flex; gap:8px;">
-                        <input type="text" id="quickHwidInput" class="input-dark" placeholder="Kompyuter bergan 1-Kodni kiriting (masalan: FS-615E-3FAA-T2NK)" oninput="handleQuickKeygenInput()" style="flex:1;">
-                        <input type="text" id="quickKeyOutput" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ" style="flex:1;">
+                        <input type="text" id="quickHwidInput" class="input-dark" placeholder="Kompyuter bergan 1-Kodni kiriting (masalan: FSS-BE35-250C)" oninput="handleQuickKeygenInput()" style="flex:1;">
+                        <input type="text" id="quickKeyOutput" class="input-dark result-display" readonly placeholder="FSS-BE35-250C-87B6A19C" style="flex:1;">
                         <button class="btn-glass-chip" onclick="copyQuickKeyResult()">📋 Nusxalash</button>
                     </div>
                 </div>
@@ -1392,7 +1402,7 @@
             </div>
             <div class="form-row">
                 <label>1-Kod (Hardware ID)</label>
-                <input type="text" id="devHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901 yoki 7A3B-9901">
+                <input type="text" id="devHwid" class="input-dark" placeholder="Masalan: FSS-7A3B-9901 yoki 7A3B-9901">
             </div>
             <div class="form-row">
                 <label>Kompyuter Nomi / Foydalanuvchi</label>
@@ -1437,13 +1447,13 @@
             </div>
 
             <div class="form-row">
-                <label>Kompyuterning 1-Kodi (Hardware / Dynamic ID):</label>
-                <input type="text" id="keyGenHwid" class="input-dark" placeholder="Masalan: FS-7A3B-9901-4K82" oninput="calculateKeyGen()">
+                <label>Kompyuterning 1-Kodi (Hardware ID):</label>
+                <input type="text" id="keyGenHwid" class="input-dark" placeholder="Masalan: FSS-7A3B-9901" oninput="calculateKeyGen()">
             </div>
 
             <div class="form-row">
                 <label>Aktivatsiya Kaliti (Dasturga kiritiladi):</label>
-                <input type="text" id="generatedKeyResult" class="input-dark result-display" readonly placeholder="FS-ACT-XXXX-YYYY-ZZZZ">
+                <input type="text" id="generatedKeyResult" class="input-dark result-display" readonly placeholder="FSS-7A3B-9901-87B6A19C">
             </div>
 
             <div class="sheet-footer">
@@ -1483,6 +1493,9 @@
                 <button class="btn-glass-chip" style="justify-content: flex-start; padding: 12px 14px;" onclick="closeModal('mobileSettingsModal'); syncWithGitHub(true);">
                     <span>🔄 Real-Vaqt Sinxronlash</span>
                 </button>
+                <button class="btn-glass-chip" style="justify-content: flex-start; padding: 12px 14px;" onclick="closeModal('mobileSettingsModal'); openCreatorSettingsModal();">
+                    <span>✈️ Telegram & Aloqa Sozlamalari</span>
+                </button>
                 <button class="btn-glass-chip" style="justify-content: flex-start; padding: 12px 14px;" onclick="closeModal('mobileSettingsModal'); openPinSettingsModal();">
                     <span>🔑 PIN Parolni O'zgartirish</span>
                 </button>
@@ -1492,6 +1505,39 @@
                 <button class="btn-glass-chip btn-logout" style="justify-content: flex-start; padding: 12px 14px; margin-top: 8px;" onclick="logout()">
                     <span>🚪 Tizimdan Chiqish</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATOR TELEGRAM CONTACT SETTINGS -->
+    <div id="creatorSettingsModal" class="modal-backdrop">
+        <div class="modal-sheet">
+            <div class="sheet-top">
+                <div class="sheet-title">✈️ Telegram & Aloqa Sozlamalari</div>
+                <button class="sheet-close-btn" onclick="closeModal('creatorSettingsModal')">&times;</button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.45;">
+                Ushbu ma'lumotlar barcha maktab kompyuterlaridagi dastur qulflash/kirish ekranida avtomatik yangilanadi va ko'rsatiladi.
+            </p>
+            <div class="form-row">
+                <label>Admin / Muallif Ismi</label>
+                <input type="text" id="creatorNameInput" class="input-dark" placeholder="Otabek S.">
+            </div>
+            <div class="form-row">
+                <label>Telegram Nik / Username (masalan: otabek_digital)</label>
+                <input type="text" id="creatorTelegramInput" class="input-dark" placeholder="otabek_digital">
+            </div>
+            <div class="form-row">
+                <label>Telegram Havolasi (masalan: https://t.me/otabek_digital)</label>
+                <input type="text" id="creatorTelegramUrlInput" class="input-dark" placeholder="https://t.me/otabek_digital">
+            </div>
+            <div class="form-row">
+                <label>Telegram Kanal Havolasi (Ixtiyoriy)</label>
+                <input type="text" id="creatorChannelInput" class="input-dark" placeholder="https://t.me/facesecurity">
+            </div>
+            <div class="sheet-footer">
+                <button class="btn-glass-chip" onclick="closeModal('creatorSettingsModal')">Bekor Qilish</button>
+                <button class="btn-add-primary" onclick="saveCreatorSettings()">💾 Saqlash va GitHub'ga Jo'natish</button>
             </div>
         </div>
     </div>
@@ -1642,11 +1688,15 @@
             const inputH = await calculateSaltedPinHash(input);
             const customH = localStorage.getItem('fss_custom_salted_pin');
 
-            const d1 = await calculateSaltedPinHash("20100111");
-            const d2 = await calculateSaltedPinHash("admin8765");
-            const d3 = await calculateSaltedPinHash("admin");
-
-            let isAllowed = (inputH === d1 || inputH === d2 || inputH === d3 || (customH && inputH === customH));
+            let isAllowed = false;
+            if (customH) {
+                isAllowed = (inputH === customH);
+            } else {
+                // First time initialization: the owner sets their master PIN
+                localStorage.setItem('fss_custom_salted_pin', inputH);
+                isAllowed = true;
+                showToast("✅ Yangi Admin PIN o'rnatildi va saqlandi!", "success");
+            }
 
             if (isAllowed) {
                 localStorage.removeItem('fss_pin_failed_count');
@@ -1724,12 +1774,14 @@
         let cloudDatabase = {
             version: "2.3",
             updated_at: new Date().toISOString(),
-            description: "FaceSecurity School Universal Cloud Hub v2.3 - otabek-digital",
-            master_auth: {
-                username: "Otabek",
-                password: "sizning_maxfiy_parolingiz",
-                updated_at: new Date().toISOString()
+            creator: {
+                name: "Otabek S.",
+                telegram: "otabek_digital",
+                telegram_url: "https://t.me/otabek_digital",
+                channel: "https://t.me/facesecurity",
+                support: "https://t.me/otabek_digital"
             },
+            description: "FaceSecurity School Universal Cloud Hub v2.3 - otabek-digital",
             global: {
                 status: "ACTIVE",
                 updated_at: new Date().toISOString()
@@ -1769,6 +1821,55 @@
             if (hdrStat) {
                 hdrStat.innerText = token ? 'GitHub & Real-Vaqt Ulangan' : 'Bulut va Real-Vaqt Faol';
             }
+        }
+
+        function updateCreatorUI() {
+            const cr = cloudDatabase.creator || {};
+            const tg = (cr.telegram || "otabek_digital").replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
+            const url = cr.telegram_url || `https://t.me/${tg}`;
+            
+            const linkEl = document.getElementById('telegramAdminLink');
+            if (linkEl) {
+                linkEl.href = url;
+                linkEl.innerHTML = `<span>✈️ Bog'lanish: t.me/${tg}</span>`;
+            }
+            const pinLink = document.getElementById('pinTelegramLink');
+            if (pinLink) {
+                pinLink.href = url;
+                pinLink.innerHTML = `<span>✈️ Admin bilan bog'lanish: t.me/${tg}</span>`;
+            }
+        }
+
+        function openCreatorSettingsModal() {
+            const cr = cloudDatabase.creator || {};
+            document.getElementById('creatorNameInput').value = cr.name || 'Otabek S.';
+            document.getElementById('creatorTelegramInput').value = cr.telegram || 'otabek_digital';
+            document.getElementById('creatorTelegramUrlInput').value = cr.telegram_url || 'https://t.me/otabek_digital';
+            document.getElementById('creatorChannelInput').value = cr.channel || 'https://t.me/facesecurity';
+            document.getElementById('creatorSettingsModal').style.display = 'flex';
+        }
+
+        async function saveCreatorSettings() {
+            const name = document.getElementById('creatorNameInput').value.trim() || 'Otabek S.';
+            let tg = document.getElementById('creatorTelegramInput').value.trim() || 'otabek_digital';
+            tg = tg.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
+            let url = document.getElementById('creatorTelegramUrlInput').value.trim() || `https://t.me/${tg}`;
+            if (!url.startsWith('http')) url = `https://${url}`;
+            const chan = document.getElementById('creatorChannelInput').value.trim();
+
+            cloudDatabase.creator = {
+                name: name,
+                telegram: tg,
+                telegram_url: url,
+                channel: chan,
+                support: url
+            };
+            cloudDatabase.updated_at = new Date().toISOString();
+
+            updateCreatorUI();
+            saveToLocalStorageAndCloud();
+            closeModal('creatorSettingsModal');
+            showToast("✈️ Aloqa sozlamalari saqlandi va GitHub'ga yuborildi!", "success");
         }
 
         function openGitHubSettingsModal() {
@@ -1838,6 +1939,7 @@
         async function initApp() {
             loadFromLocalStorage();
             updateGitHubStatusUI();
+            updateCreatorUI();
             await syncWithGitHub(false);
             renderDeviceList();
             startRealtimeDeviceDiscovery();
@@ -1899,7 +2001,10 @@
 
                 if (fetchedData) {
                     const data = fetchedData;
-                    if (data.master_auth) cloudDatabase.master_auth = data.master_auth;
+                    if (data.creator) {
+                        cloudDatabase.creator = { ...(cloudDatabase.creator || {}), ...data.creator };
+                        updateCreatorUI();
+                    }
                     if (data.global) cloudDatabase.global = data.global;
                     if (data.blacklist) cloudDatabase.blacklist = data.blacklist;
                     if (data.used_codes) {
@@ -1944,39 +2049,43 @@
         }
 
         async function registerDiscoveredDevice(info) {
-            if (!info || (!info.code && !info.clean && !info.clean_base)) return;
-            const code = info.code || info.clean;
-            if (code === 'FS-GLOBAL' || code === 'GLOBAL') return;
+            if (!info || (!info.code && !info.clean && !info.clean_base && !info.hwid && !info.base_code)) return;
+            
+            // 1. Base static HWID is ALWAYS 8 hex characters: FSS-XXXX-XXXX (e.g. FSS-BE35-250C)
+            const rawBase = info.base_code || info.hwid || info.clean_base || info.clean || info.code;
+            const clean = cleanMachineCode(rawBase);
+            if (!clean || clean === 'GLOBAL' || clean === 'FSGLOBAL' || clean === 'FSSGLOBAL') return;
 
-            const clean = cleanMachineCode(code);
+            const base8 = clean.substring(0, 8);
+            const standardHwid = `FSS-${base8.substring(0, 4)}-${base8.substring(4, 8)}`;
+
+            // 2. Dynamic 1-Kod (if locked with session challenge, e.g. FSS-BE35-250C-5ZN3)
+            const rawDyn = info.dynamic_code || info.code || '';
+            const cleanDyn = cleanMachineCode(rawDyn);
+            const dynamicHwid = cleanDyn.length >= 12
+                ? `FSS-${cleanDyn.substring(0, 4)}-${cleanDyn.substring(4, 8)}-${cleanDyn.substring(8, 12)}`
+                : standardHwid;
+
             const compName = info.name || '';
             const schoolName = (info.school && info.school !== 'Maktab') ? info.school : 'Maktab';
             const status = info.status || 'LOCKED';
-            const ver = info.ver || 'v2.3';
+            const ver = info.ver || 'v2.4';
 
-            const hwid = code.startsWith('FS-') ? code : `FS-${code}`;
-            const cleanBase = clean.substring(0, 8);
-
-            // Match if existing device has the same base hardware ID (first 8 chars)
-            let matchedKey = null;
+            // Clean up any old mismatched keys in memory (e.g. if key was saved with 12-char suffix)
             for (const k in cloudDatabase.devices) {
-                const existingClean = cleanMachineCode(k);
-                if (existingClean.substring(0, 8) === cleanBase) {
-                    matchedKey = k;
-                    break;
+                if (k !== standardHwid && cleanMachineCode(k).substring(0, 8) === base8) {
+                    delete cloudDatabase.devices[k];
                 }
             }
 
-            const isNew = !matchedKey && !cloudDatabase.devices[hwid];
-            const existing = matchedKey ? (cloudDatabase.devices[matchedKey] || {}) : (cloudDatabase.devices[hwid] || {});
+            const isNew = !cloudDatabase.devices[standardHwid];
+            const existing = cloudDatabase.devices[standardHwid] || {};
 
-            if (matchedKey && matchedKey !== hwid) {
-                delete cloudDatabase.devices[matchedKey];
-            }
-
-            cloudDatabase.devices[hwid] = {
+            cloudDatabase.devices[standardHwid] = {
                 ...existing,
-                pc_name: compName || existing.pc_name || hwid,
+                hwid: standardHwid,
+                dynamic_code: dynamicHwid,
+                pc_name: compName || existing.pc_name || standardHwid,
                 school: schoolName || existing.school || 'Maktab',
                 status: status || existing.status || 'LOCKED',
                 ver: ver,
@@ -1987,7 +2096,7 @@
             renderDeviceList();
 
             if (isNew) {
-                showToast(`⚡ Yangi kompyuter ulandi: ${compName || hwid}`, "success");
+                showToast(`⚡ Yangi kompyuter ulandi: ${compName || standardHwid}`, "success");
             }
         }
 
@@ -2227,7 +2336,10 @@
         function cleanMachineCode(machineCode) {
             if (!machineCode) return "";
             let c = machineCode.trim().toUpperCase();
-            if (c.startsWith("FS-")) c = c.substring(3);
+            if (c.startsWith("FSS-")) c = c.substring(4);
+            else if (c.startsWith("FS-")) c = c.substring(3);
+            else if (c.startsWith("FSS")) c = c.substring(3);
+            else if (c.StartsWith && c.startsWith("FS")) c = c.substring(2);
             else if (c.startsWith("FS")) c = c.substring(2);
             c = c.replace(/[^A-Z0-9]/g, "");
             return c;
@@ -2240,20 +2352,20 @@
             if (window.CryptoJS && CryptoJS.HmacSHA256) {
                 const ms = _getMS();
                 
-                // 1. Agar 12-belgili dinamik sessiya kodi bo'lsa (FS-615E-3FAA-T2NK -> 615E3FAAT2NK)
+                // 1. Agar 12-belgili dinamik sessiya kodi bo'lsa (FSS-615E-3FAA-T2NK -> 615E3FAAT2NK)
                 if (clean.length >= 12) {
                     const sessCode = clean.substring(0, 12);
                     const hmac = CryptoJS.HmacSHA256(sessCode + "_ACTIVATED", ms);
                     const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                    return `FS-${sessCode.substring(0, 4)}-${sessCode.substring(4, 8)}-${sessCode.substring(8, 12)}-${signHex}`;
+                    return `FSS-${sessCode.substring(0, 4)}-${sessCode.substring(4, 8)}-${sessCode.substring(8, 12)}-${signHex}`;
                 }
                 
-                // 2. 8-belgili doimiy apparat kodi (FS-615E-3FAA -> 615E3FAA)
+                // 2. 8-belgili doimiy apparat kodi (FSS-615E-3FAA -> 615E3FAA)
                 if (clean.length < 8) clean = clean.padEnd(8, '0');
                 const shortCode = clean.substring(0, 8);
                 const hmac = CryptoJS.HmacSHA256(shortCode + "_ACTIVATED", ms);
                 const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                return `FS-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
+                return `FSS-${shortCode.substring(0, 4)}-${shortCode.substring(4, 8)}-${signHex}`;
             }
             return "";
         }
@@ -2267,7 +2379,7 @@
                 const ms = _getMS();
                 const hmac = CryptoJS.HmacSHA256("MASTER_HASH_KEY_" + salt, ms);
                 const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                return `FS-MST-${salt}-${signHex}`;
+                return `FSS-MST-${salt}-${signHex}`;
             }
             return "";
         }
@@ -2398,8 +2510,8 @@
             const clean = cleanMachineCode(rawCode);
             if (!clean) return;
             const fullHwid = clean.length >= 12 
-                ? `FS-${clean.substring(0, 4)}-${clean.substring(4, 8)}-${clean.substring(8, 12)}`
-                : `FS-${clean.substring(0, 4)}-${clean.substring(4, 8)}`;
+                ? `FSS-${clean.substring(0, 4)}-${clean.substring(4, 8)}-${clean.substring(8, 12)}`
+                : `FSS-${clean.substring(0, 4)}-${clean.substring(4, 8)}`;
             
             if (!cloudDatabase.used_codes) cloudDatabase.used_codes = {};
             cloudDatabase.used_codes[clean] = {
@@ -2451,6 +2563,12 @@
 
         function getDeviceActiveKey(hwid) {
             const dev = cloudDatabase.devices && cloudDatabase.devices[hwid];
+            // If device reported a dynamic 1-kod and is not active, generate key for that dynamic code
+            if (dev && dev.dynamic_code && dev.dynamic_code !== hwid && dev.status !== 'ACTIVE') {
+                const dynKey = generateRemoteActivationKeySync(dev.dynamic_code);
+                if (dynKey) return dynKey;
+            }
+
             const salt = (dev && dev.key_salt) ? dev.key_salt : null;
             const clean = cleanMachineCode(hwid);
             const base8 = clean.substring(0, 8);
@@ -2460,14 +2578,14 @@
                 if (!salt || salt === 'BASE') {
                     const hmac = CryptoJS.HmacSHA256(base8 + "_ACTIVATED", ms);
                     const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                    return `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${signHex}`;
+                    return `FSS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${signHex}`;
                 } else {
                     const hmac = CryptoJS.HmacSHA256(base8 + "_" + salt + "_ACTIVATED", ms);
                     const signHex = hmac.toString(CryptoJS.enc.Hex).toUpperCase().substring(0, 8);
-                    return `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${salt}-${signHex}`;
+                    return `FSS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-${salt}-${signHex}`;
                 }
             }
-            return `FS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-B3B70A19`;
+            return `FSS-${base8.substring(0, 4)}-${base8.substring(4, 8)}-B3B70A19`;
         }
 
         function advanceDeviceKey(hwid) {
@@ -2547,7 +2665,8 @@
                 const matchName = (d.pc_name || '').toLowerCase().includes(search);
                 const matchSchool = (d.school || '').toLowerCase().includes(search);
                 const matchHwid = k.toLowerCase().includes(search);
-                return matchName || matchSchool || matchHwid;
+                const matchDyn = (d.dynamic_code || '').toLowerCase().includes(search);
+                return matchName || matchSchool || matchHwid || matchDyn;
             });
 
             devKeys.forEach(k => {
@@ -2594,7 +2713,7 @@
                                 <span>🖥️ ${d.pc_name || k}</span>
                             </div>
                             <div class="pc-sub-text">
-                                <span>🏫 ${d.school || 'Maktab'}</span> · <span>${d.ver || 'v2.3'}</span>
+                                <span>🏫 ${d.school || 'Maktab'}</span> · <span>${d.ver || 'v2.4'}</span>
                             </div>
                         </div>
                         <div class="${chipClass}">
@@ -2607,6 +2726,11 @@
                             <span class="lbl">Kompyuter Kodi (HWID):</span>
                             <span class="val-hwid" style="font-size: 13px; color: var(--primary); font-weight: 800;">${k}</span>
                         </div>
+                        ${d.dynamic_code && d.dynamic_code !== k && isBlocked ? `
+                        <div class="detail-item-row">
+                            <span class="lbl">Sessiya 1-Kodi:</span>
+                            <span style="font-size: 11px; color: var(--accent-yellow); font-family: var(--font-mono); font-weight: 700;">${d.dynamic_code}</span>
+                        </div>` : ''}
                         <div class="detail-item-row">
                             <span class="lbl">Oxirgi Faollik:</span>
                             <span style="font-size: 10.5px; color: var(--text-dim);">${updatedTime}</span>
@@ -2659,13 +2783,13 @@
             }
 
             const clean = cleanMachineCode(rawHwid);
-            const hwid = `FS-${clean.substring(0,4)}-${clean.substring(4,8)}`;
+            const hwid = `FSS-${clean.substring(0,4)}-${clean.substring(4,8)}`;
 
             cloudDatabase.devices[hwid] = {
                 pc_name: name || hwid,
                 school: school || 'Maktab',
                 status: status,
-                ver: 'v2.3',
+                ver: 'v2.4',
                 updated_at: new Date().toISOString()
             };
 

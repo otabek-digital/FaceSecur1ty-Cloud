@@ -1,25 +1,35 @@
 {
   "version": "2.3",
-  "updated_at": "2026-09-11T15:00:00Z",
-  "description": "FaceSecurity School Universal Cloud Hub v2.3 - otabek-digital",
-  "master_auth": {
-    "username": "Otabek",
-    "password": "sizning_maxfiy_parolingiz"
+  "updated_at": "2026-09-14T01:00:00Z",
+  "creator": {
+    "name": "FaceSecurity Support",
+    "telegram": "",
+    "telegram_url": "",
+    "channel": "",
+    "support": ""
   },
+  "description": "FaceSecurity School Universal Cloud Hub",
   "global": {
     "status": "ACTIVE",
     "note": "Barcha maktablar va kompyuterlarni global boshqarish siyosati"
   },
   "blacklist": [
-    "FS-0000-BANNED"
+    "FSS-0000-BANNED"
   ],
   "devices": {
-    "FS-72CA-5CFA": {
+    "FSS-D7BC-859A": {
+      "pc_name": "DESKTOP-TCEU02E",
+      "school": "Maktab",
+      "status": "ACTIVE",
+      "ver": "v2.4",
+      "updated_at": "2026-09-14T01:00:00Z"
+    },
+    "FSS-72CA-5CFA": {
       "pc_name": "TECHESHERALI",
       "school": "Maktab",
       "status": "ACTIVE",
-      "ver": "v2.3",
-      "updated_at": "2026-09-11T15:00:00Z"
+      "ver": "v2.4",
+      "updated_at": "2026-09-14T00:00:00Z"
     }
   },
   "used_codes": {}
