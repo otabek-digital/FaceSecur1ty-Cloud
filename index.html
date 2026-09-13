@@ -1787,15 +1787,7 @@
                 updated_at: new Date().toISOString()
             },
             blacklist: [],
-            devices: {
-                "FS-72CA-5CFA": {
-                    pc_name: "TECHESHERALI",
-                    school: "Maktab",
-                    status: "ACTIVE",
-                    ver: "v2.3",
-                    updated_at: new Date().toISOString()
-                }
-            },
+            devices: {},
             used_codes: {}
         };
 
@@ -1953,16 +1945,8 @@
                     const parsed = JSON.parse(saved);
                     if (parsed) {
                         cloudDatabase = { ...cloudDatabase, ...parsed };
-                        if (!cloudDatabase.devices || Object.keys(cloudDatabase.devices).length === 0) {
-                            cloudDatabase.devices = {
-                                "FS-72CA-5CFA": {
-                                    pc_name: "TECHESHERALI",
-                                    school: "Maktab",
-                                    status: "ACTIVE",
-                                    ver: "v2.3",
-                                    updated_at: new Date().toISOString()
-                                }
-                            };
+                        if (!cloudDatabase.devices) {
+                            cloudDatabase.devices = {};
                         }
                     }
                 } catch(e) {}
@@ -2071,10 +2055,14 @@
             const status = info.status || 'LOCKED';
             const ver = info.ver || 'v2.4';
 
-            // Clean up any old mismatched keys in memory (e.g. if key was saved with 12-char suffix)
+            // Clean up any old mismatched keys in memory or duplicate cards with same PC name
             for (const k in cloudDatabase.devices) {
-                if (k !== standardHwid && cleanMachineCode(k).substring(0, 8) === base8) {
-                    delete cloudDatabase.devices[k];
+                if (k !== standardHwid) {
+                    const dev = cloudDatabase.devices[k];
+                    const kBase8 = cleanMachineCode(k).substring(0, 8);
+                    if (kBase8 === base8 || (compName && dev && dev.pc_name && dev.pc_name.trim().toUpperCase() === compName.trim().toUpperCase())) {
+                        delete cloudDatabase.devices[k];
+                    }
                 }
             }
 
