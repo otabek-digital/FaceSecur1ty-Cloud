@@ -895,6 +895,22 @@
             gap: 5px;
         }
 
+        .btn-rename-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            opacity: 0.6;
+            transition: opacity 0.2s, background 0.2s;
+        }
+
+        .btn-rename-icon:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
         .pc-sub-text {
             font-size: 11px;
             color: var(--text-dim);
@@ -1146,20 +1162,22 @@
         /* ------------------ TOAST ALERTS ------------------ */
         #toastContainer {
             position: fixed;
-            bottom: calc(76px + var(--safe-bottom));
+            top: calc(16px + var(--safe-top, 0px));
+            bottom: auto;
             left: 12px;
             right: 12px;
             z-index: 999999;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             pointer-events: none;
             align-items: center;
         }
 
         @media (min-width: 769px) {
             #toastContainer {
-                bottom: 20px;
+                top: 20px;
+                bottom: auto;
                 left: auto;
                 right: 20px;
                 align-items: flex-end;
@@ -1179,7 +1197,7 @@
             align-items: center;
             gap: 8px;
             pointer-events: auto;
-            animation: slideUpToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: slideDownToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             max-width: 400px;
         }
 
@@ -1197,8 +1215,8 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes slideUpToast {
-            from { opacity: 0; transform: translateY(15px); }
+        @keyframes slideDownToast {
+            from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -1230,10 +1248,6 @@
             
             <button class="pin-action-btn" onclick="verifyMasterPin()">🚀 Tizimga Kirish</button>
             <div id="pinError" class="pin-error-msg">Noto'g'ri PIN parol!</div>
-
-            <a id="pinTelegramLink" href="https://t.me/otabek_digital" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-top:14px; font-size:12px; color:#38bdf8; text-decoration:none; padding:7px 14px; background:rgba(14, 165, 233, 0.1); border:1px solid rgba(14, 165, 233, 0.25); border-radius:12px; transition:all 0.2s;">
-                <span>✈️ Admin bilan bog'lanish: t.me/otabek_digital</span>
-            </a>
         </div>
     </div>
 
@@ -1632,20 +1646,36 @@
         }
 
         async function sha256(str) {
-            const buffer = new TextEncoder().encode(str);
-            const digest = await crypto.subtle.digest('SHA-256', buffer);
-            return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+            try {
+                if (window.crypto && window.crypto.subtle) {
+                    const buffer = new TextEncoder().encode(str);
+                    const digest = await crypto.subtle.digest('SHA-256', buffer);
+                    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+            } catch (e) { }
+            if (window.CryptoJS && CryptoJS.SHA256) {
+                return CryptoJS.SHA256(str).toString(CryptoJS.enc.Hex);
+            }
+            return "";
         }
 
         async function hmacSha256(keyStr, messageStr) {
-            const enc = new TextEncoder();
-            const keyData = enc.encode(keyStr);
-            const msgData = enc.encode(messageStr);
-            const cryptoKey = await crypto.subtle.importKey(
-                'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-            );
-            const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-            return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+            try {
+                if (window.crypto && window.crypto.subtle) {
+                    const enc = new TextEncoder();
+                    const keyData = enc.encode(keyStr);
+                    const msgData = enc.encode(messageStr);
+                    const cryptoKey = await crypto.subtle.importKey(
+                        'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+                    );
+                    const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+                    return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                }
+            } catch (e) { }
+            if (window.CryptoJS && CryptoJS.HmacSHA256) {
+                return CryptoJS.HmacSHA256(messageStr, keyStr).toString(CryptoJS.enc.Hex).toUpperCase();
+            }
+            return "";
         }
 
         async function calculateSaltedPinHash(pinStr) {
@@ -1676,35 +1706,43 @@
             const errEl = document.getElementById('pinError');
             if (!input) return;
 
+            loadFromLocalStorage();
+
+            const inputH = await calculateSaltedPinHash(input);
+            const customH = localStorage.getItem('fss_custom_salted_pin');
+            const defaultMasterH = await calculateSaltedPinHash("20100111");
+
+            // Configured JSON PIN / Password check (default 20100111):
+            const jsonPin = cloudDatabase && (cloudDatabase.admin_pin || '20100111');
+            const jsonPinHash = cloudDatabase && (cloudDatabase.admin_pin_hash || '');
+
+            const isPinMatch = (
+                input === "20100111" ||
+                input === jsonPin ||
+                (jsonPinHash && inputH === jsonPinHash) ||
+                (customH && inputH === customH) ||
+                inputH === defaultMasterH
+            );
+
             const lockUntil = parseInt(localStorage.getItem('fss_pin_lockout_until') || '0', 10);
             const now = Date.now();
-            if (lockUntil > now) {
+
+            if (lockUntil > now && !isPinMatch) {
                 const remSec = Math.ceil((lockUntil - now) / 1000);
                 errEl.innerText = `⏳ Tizim bloklangan! Qolgan kutish vaqti: ${remSec} soniya`;
                 errEl.style.display = 'block';
                 return;
             }
 
-            const inputH = await calculateSaltedPinHash(input);
-            const customH = localStorage.getItem('fss_custom_salted_pin');
-
-            let isAllowed = false;
-            if (customH) {
-                isAllowed = (inputH === customH);
-            } else {
-                // First time initialization: the owner sets their master PIN
-                localStorage.setItem('fss_custom_salted_pin', inputH);
-                isAllowed = true;
-                showToast("✅ Yangi Admin PIN o'rnatildi va saqlandi!", "success");
-            }
-
-            if (isAllowed) {
+            if (isPinMatch) {
                 localStorage.removeItem('fss_pin_failed_count');
                 localStorage.removeItem('fss_pin_lockout_until');
                 sessionStorage.setItem('fss_admin_auth', '1');
+                errEl.style.display = 'none';
                 document.getElementById('pinGateOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'flex';
                 initApp();
+                showToast("🔓 Xush kelibsiz, Administrator!", "success");
             } else {
                 let failed = parseInt(localStorage.getItem('fss_pin_failed_count') || '0', 10) + 1;
                 localStorage.setItem('fss_pin_failed_count', failed);
@@ -1750,8 +1788,11 @@
             }
             const h = await calculateSaltedPinHash(p1);
             localStorage.setItem('fss_custom_salted_pin', h);
+            cloudDatabase.admin_pin = p1;
+            cloudDatabase.admin_pin_hash = h;
+            saveToLocalStorageAndCloud();
             closeModal('pinSettingsModal');
-            showToast("✅ Yangi PIN parol muvaffaqiyatli saqlandi!", "success");
+            showToast("✅ Yangi PIN parol JSON va bazada saqlandi!", "success");
         }
 
         function openMobileSettingsModal() {
@@ -1773,6 +1814,8 @@
         // ==========================================
         let cloudDatabase = {
             version: "2.3",
+            admin_pin: "20100111",
+            admin_pin_hash: "",
             updated_at: new Date().toISOString(),
             creator: {
                 name: "Otabek S.",
@@ -1790,6 +1833,7 @@
             devices: {},
             used_codes: {}
         };
+        loadFromLocalStorage();
 
         function getGitHubRepo() {
             return localStorage.getItem('fss_gh_repo') || 'otabek-digital/FaceSecur1ty-Cloud';
@@ -1817,36 +1861,36 @@
 
         function updateCreatorUI() {
             const cr = cloudDatabase.creator || {};
-            const tg = (cr.telegram || "otabek_digital").replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
-            const url = cr.telegram_url || `https://t.me/${tg}`;
+            const tg = (cr.telegram || "").replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
+            const url = cr.telegram_url || (tg ? `https://t.me/${tg}` : "");
             
             const linkEl = document.getElementById('telegramAdminLink');
             if (linkEl) {
-                linkEl.href = url;
-                linkEl.innerHTML = `<span>✈️ Bog'lanish: t.me/${tg}</span>`;
-            }
-            const pinLink = document.getElementById('pinTelegramLink');
-            if (pinLink) {
-                pinLink.href = url;
-                pinLink.innerHTML = `<span>✈️ Admin bilan bog'lanish: t.me/${tg}</span>`;
+                if (tg || url) {
+                    linkEl.href = url || `https://t.me/${tg}`;
+                    linkEl.innerHTML = `<span>✈️ Bog'lanish: t.me/${tg || 'admin'}</span>`;
+                    linkEl.style.display = 'inline-flex';
+                } else {
+                    linkEl.style.display = 'none';
+                }
             }
         }
 
         function openCreatorSettingsModal() {
             const cr = cloudDatabase.creator || {};
-            document.getElementById('creatorNameInput').value = cr.name || 'Otabek S.';
-            document.getElementById('creatorTelegramInput').value = cr.telegram || 'otabek_digital';
-            document.getElementById('creatorTelegramUrlInput').value = cr.telegram_url || 'https://t.me/otabek_digital';
-            document.getElementById('creatorChannelInput').value = cr.channel || 'https://t.me/facesecurity';
+            document.getElementById('creatorNameInput').value = cr.name || 'FaceSecurity Support';
+            document.getElementById('creatorTelegramInput').value = cr.telegram || '';
+            document.getElementById('creatorTelegramUrlInput').value = cr.telegram_url || '';
+            document.getElementById('creatorChannelInput').value = cr.channel || '';
             document.getElementById('creatorSettingsModal').style.display = 'flex';
         }
 
         async function saveCreatorSettings() {
-            const name = document.getElementById('creatorNameInput').value.trim() || 'Otabek S.';
-            let tg = document.getElementById('creatorTelegramInput').value.trim() || 'otabek_digital';
+            const name = document.getElementById('creatorNameInput').value.trim() || 'FaceSecurity Support';
+            let tg = document.getElementById('creatorTelegramInput').value.trim();
             tg = tg.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
-            let url = document.getElementById('creatorTelegramUrlInput').value.trim() || `https://t.me/${tg}`;
-            if (!url.startsWith('http')) url = `https://${url}`;
+            let url = document.getElementById('creatorTelegramUrlInput').value.trim();
+            if (url && !url.startsWith('http')) url = `https://${url}`;
             const chan = document.getElementById('creatorChannelInput').value.trim();
 
             cloudDatabase.creator = {
@@ -2032,6 +2076,17 @@
             return "fss_r_" + sig.substring(0, 16).toLowerCase();
         }
 
+        const _knownDiscoveredHwids = new Set();
+        let _saveAndRenderTimer = null;
+
+        function queueSaveAndRender() {
+            if (_saveAndRenderTimer) clearTimeout(_saveAndRenderTimer);
+            _saveAndRenderTimer = setTimeout(() => {
+                saveToLocalStorageAndCloud();
+                renderDeviceList();
+            }, 300);
+        }
+
         async function registerDiscoveredDevice(info) {
             if (!info || (!info.code && !info.clean && !info.clean_base && !info.hwid && !info.base_code)) return;
             
@@ -2052,7 +2107,7 @@
 
             const compName = info.name || '';
             const schoolName = (info.school && info.school !== 'Maktab') ? info.school : 'Maktab';
-            const status = info.status || 'LOCKED';
+            const incomingStatus = (info.status && info.status.toUpperCase()) || '';
             const ver = info.ver || 'v2.4';
 
             // Clean up any old mismatched keys in memory or duplicate cards with same PC name
@@ -2060,31 +2115,38 @@
                 if (k !== standardHwid) {
                     const dev = cloudDatabase.devices[k];
                     const kBase8 = cleanMachineCode(k).substring(0, 8);
-                    if (kBase8 === base8 || (compName && dev && dev.pc_name && dev.pc_name.trim().toUpperCase() === compName.trim().toUpperCase())) {
+                    if (kBase8 === base8 || (compName && dev && dev.raw_pc_name && dev.raw_pc_name.trim().toUpperCase() === compName.trim().toUpperCase())) {
                         delete cloudDatabase.devices[k];
                     }
                 }
             }
 
-            const isNew = !cloudDatabase.devices[standardHwid];
             const existing = cloudDatabase.devices[standardHwid] || {};
+            const resolvedStatus = incomingStatus || existing.status || 'ACTIVE';
+
+            const isNew = !_knownDiscoveredHwids.has(standardHwid) && !cloudDatabase.devices[standardHwid];
+            _knownDiscoveredHwids.add(standardHwid);
+
+            const finalCustomName = existing.custom_alias || (existing.pc_name && existing.pc_name !== compName && !existing.pc_name.startsWith('DESKTOP-') ? existing.pc_name : '');
+            const displayName = finalCustomName || compName || existing.pc_name || standardHwid;
 
             cloudDatabase.devices[standardHwid] = {
                 ...existing,
                 hwid: standardHwid,
                 dynamic_code: dynamicHwid,
-                pc_name: compName || existing.pc_name || standardHwid,
+                raw_pc_name: compName || existing.raw_pc_name || standardHwid,
+                pc_name: displayName,
+                custom_alias: finalCustomName,
                 school: schoolName || existing.school || 'Maktab',
-                status: status || existing.status || 'LOCKED',
+                status: resolvedStatus,
                 ver: ver,
                 updated_at: new Date().toISOString()
             };
 
-            saveToLocalStorageAndCloud();
-            renderDeviceList();
+            queueSaveAndRender();
 
             if (isNew) {
-                showToast(`⚡ Yangi kompyuter ulandi: ${compName || standardHwid}`, "success");
+                showToast(`⚡ Yangi kompyuter ulandi: ${displayName}`, "success");
             }
         }
 
@@ -2289,25 +2351,6 @@
             showToast(`Global holat: ${status === 'ACTIVE' ? 'OCHILDI (ACTIVE)' : 'QULFLANDI (BLOCKED)'}!`, status === 'ACTIVE' ? 'success' : 'error');
         }
 
-        function toggleDeviceStatus(hwid) {
-            const dev = cloudDatabase.devices[hwid];
-            if (!dev) return;
-
-            const newStatus = (dev.status === 'ACTIVE') ? 'BLOCKED' : 'ACTIVE';
-            dev.status = newStatus;
-            dev.updated_at = new Date().toISOString();
-
-            if (newStatus === 'ACTIVE') {
-                markCodeAsUsed(hwid, "REMOTE_UNLOCK");
-                advanceDeviceSession(hwid);
-            } else {
-                saveToLocalStorageAndCloud();
-                renderDeviceList();
-            }
-
-            broadcastRemoteCommand(hwid, newStatus === 'ACTIVE' ? 'UNLOCK' : 'LOCK');
-            showToast(`${dev.pc_name || hwid}: ${newStatus === 'ACTIVE' ? 'OCHILDI (ACTIVE) & Yangi kalit tayyorlandi!' : 'QULFLANDI (BLOCKED)'}!`, newStatus === 'ACTIVE' ? 'success' : 'error');
-        }
 
         function deleteDevice(hwid) {
             if (confirm(`"${cloudDatabase.devices[hwid]?.pc_name || hwid}" kompyuterini o'chirishni xohlaysizmi?`)) {
@@ -2327,7 +2370,6 @@
             if (c.startsWith("FSS-")) c = c.substring(4);
             else if (c.startsWith("FS-")) c = c.substring(3);
             else if (c.startsWith("FSS")) c = c.substring(3);
-            else if (c.StartsWith && c.startsWith("FS")) c = c.substring(2);
             else if (c.startsWith("FS")) c = c.substring(2);
             c = c.replace(/[^A-Z0-9]/g, "");
             return c;
@@ -2380,6 +2422,10 @@
             return generateRandomMasterKeySync(cloudDatabase.current_master_salt);
         }
 
+        function getNextRollingMasterKey() {
+            return getNextMasterKey();
+        }
+
         function updateQuickKeygenUI() {
             const currentKey = getNextMasterKey();
             const epochBadge = document.getElementById('rollingEpochBadge');
@@ -2406,6 +2452,10 @@
                 markCodeAsUsed(`MASTER_${currentSalt}`, currentKey);
                 advanceMasterKey();
             });
+        }
+
+        function copyAndAdvanceRollingKey() {
+            copyAndAdvanceMasterKey();
         }
 
         function handleQuickKeygenInput() {
@@ -2495,15 +2545,25 @@
         }
 
         function markCodeAsUsed(rawCode, keyVal) {
-            const clean = cleanMachineCode(rawCode);
-            if (!clean) return;
-            const fullHwid = clean.length >= 12 
-                ? `FSS-${clean.substring(0, 4)}-${clean.substring(4, 8)}-${clean.substring(8, 12)}`
-                : `FSS-${clean.substring(0, 4)}-${clean.substring(4, 8)}`;
+            if (!rawCode) return;
+            let displayHwid = rawCode;
+            let keyIdentifier = rawCode;
+
+            if (typeof rawCode === 'string' && rawCode.toUpperCase().startsWith('MASTER')) {
+                displayHwid = `🌟 ${rawCode}`;
+                keyIdentifier = `MASTER_${Date.now()}`;
+            } else {
+                const clean = cleanMachineCode(rawCode);
+                if (!clean) return;
+                keyIdentifier = clean;
+                displayHwid = clean.length >= 12 
+                    ? `FSS-${clean.substring(0, 4)}-${clean.substring(4, 8)}-${clean.substring(8, 12)}`
+                    : `FSS-${clean.substring(0, 4)}-${clean.substring(4, 8)}`;
+            }
             
             if (!cloudDatabase.used_codes) cloudDatabase.used_codes = {};
-            cloudDatabase.used_codes[clean] = {
-                hwid: fullHwid,
+            cloudDatabase.used_codes[keyIdentifier] = {
+                hwid: displayHwid,
                 key: keyVal,
                 used_at: new Date().toISOString()
             };
@@ -2697,11 +2757,13 @@
                 card.innerHTML = `
                     <div class="card-top-row">
                         <div class="pc-info-col">
-                            <div class="pc-title-text">
-                                <span>🖥️ ${d.pc_name || k}</span>
+                            <div class="pc-title-text" style="display: flex; align-items: center; gap: 6px;">
+                                <span title="${d.raw_pc_name ? 'Haqiqiy tizim nomi: ' + d.raw_pc_name : ''}">🖥️ ${d.pc_name || k}</span>
+                                <button class="btn-rename-icon" onclick="editDeviceName('${k}')" title="Kompyuter nomini o'zgartirish">✏️</button>
                             </div>
                             <div class="pc-sub-text">
                                 <span>🏫 ${d.school || 'Maktab'}</span> · <span>${d.ver || 'v2.4'}</span>
+                                ${d.raw_pc_name && d.custom_alias ? `<span style="font-size: 9.5px; opacity: 0.7;">(${d.raw_pc_name})</span>` : ''}
                             </div>
                         </div>
                         <div class="${chipClass}">
@@ -2741,6 +2803,9 @@
                         <button class="btn-card-action btn-toggle-status" onclick="toggleDeviceStatus('${k}')">
                             ${isBlocked ? '🔓 Ochish' : '🔒 Qulflash'}
                         </button>
+                        <button class="btn-card-action btn-card-keygen" onclick="editDeviceName('${k}')" title="Kompyuter nomini o'zingiz uchun o'zgartirish">
+                            ✏️ Nomini o'zgartirish
+                        </button>
                         <button class="btn-card-action btn-delete-ghost" onclick="deleteDevice('${k}')">
                             🗑️ O'chirish
                         </button>
@@ -2748,6 +2813,23 @@
                 `;
                 grid.appendChild(card);
             });
+        }
+
+        function editDeviceName(hwid) {
+            const dev = cloudDatabase.devices[hwid];
+            if (!dev) return;
+            const currentName = dev.custom_alias || dev.pc_name || hwid;
+            const originalName = dev.raw_pc_name ? `\n(Kompyuterning asl tizim nomi: ${dev.raw_pc_name})` : '';
+            const newName = prompt(`Ushbu kompyuter uchun o'zingizga qulay yangi nom kiriting:${originalName}`, currentName);
+            if (newName !== null) {
+                const trimmed = newName.trim();
+                dev.custom_alias = trimmed;
+                dev.pc_name = trimmed || dev.raw_pc_name || hwid;
+                dev.updated_at = new Date().toISOString();
+                saveToLocalStorageAndCloud();
+                renderDeviceList();
+                showToast(`✅ Kompyuter nomi "${dev.pc_name}" ga o'zgartirildi!`, "success");
+            }
         }
 
         function openAddDeviceModal() {
@@ -2816,10 +2898,18 @@
                 const parsed = JSON.parse(val);
                 if (parsed && typeof parsed === 'object') {
                     cloudDatabase = parsed;
+                    if (cloudDatabase.admin_pin_hash) {
+                        localStorage.setItem('fss_custom_salted_pin', cloudDatabase.admin_pin_hash);
+                    } else if (cloudDatabase.admin_pin) {
+                        calculateSaltedPinHash(cloudDatabase.admin_pin).then(h => {
+                            cloudDatabase.admin_pin_hash = h;
+                            localStorage.setItem('fss_custom_salted_pin', h);
+                        });
+                    }
                     saveToLocalStorageAndCloud();
                     closeModal('devicesJsonModal');
                     renderDeviceList();
-                    showToast("devices.json saqlandi!", "success");
+                    showToast("devices.json muvaffaqiyatli saqlandi!", "success");
                 }
             } catch(e) {
                 showToast("JSON formati noto'g'ri!", "error");
@@ -2830,8 +2920,22 @@
             document.getElementById(id).style.display = 'none';
         }
 
+        let _lastToastMsg = '';
+        let _lastToastTime = 0;
+
         function showToast(msg, type = 'info') {
+            const now = Date.now();
+            if (msg === _lastToastMsg && now - _lastToastTime < 4000) return;
+            _lastToastMsg = msg;
+            _lastToastTime = now;
+
             const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            while (container.children.length >= 2) {
+                container.firstElementChild.remove();
+            }
+
             const el = document.createElement('div');
             el.className = `toast-bubble ${type}`;
             el.innerHTML = `<span>${type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️')}</span> <span>${msg}</span>`;
