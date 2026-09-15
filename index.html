@@ -1549,6 +1549,11 @@
                 <label>Telegram Kanal Havolasi (Ixtiyoriy)</label>
                 <input type="text" id="creatorChannelInput" class="input-dark" placeholder="https://t.me/facesecurity">
             </div>
+            <div class="form-row">
+                <label>🤖 Admin Telegram Bot Tokeni (Masofaviy parollarni yuborish uchun)</label>
+                <input type="text" id="creatorBotTokenInput" class="input-dark" placeholder="8235249447:AAEXUCAxdy0YO_HxEjYbPAljreiifyAO-5E" style="font-family: var(--font-mono); font-size: 11.5px;">
+                <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">Ushbu token orqali maktab kompyuterlari parollari adminga yuboriladi.</span>
+            </div>
             <div class="sheet-footer">
                 <button class="btn-glass-chip" onclick="closeModal('creatorSettingsModal')">Bekor Qilish</button>
                 <button class="btn-add-primary" onclick="saveCreatorSettings()">💾 Saqlash va GitHub'ga Jo'natish</button>
@@ -1836,7 +1841,18 @@
         loadFromLocalStorage();
 
         function getGitHubRepo() {
-            return localStorage.getItem('fss_gh_repo') || 'otabek-digital/FaceSecur1ty-Cloud';
+            const saved = localStorage.getItem('fss_gh_repo');
+            if (saved && saved.trim()) return saved.trim();
+            try {
+                if (window.location.hostname && window.location.hostname.includes('github.io')) {
+                    const hostParts = window.location.hostname.split('.');
+                    const owner = hostParts[0];
+                    const pathParts = window.location.pathname.split('/').filter(Boolean);
+                    const repoName = pathParts.length > 0 ? pathParts[0] : 'FaceSecur1ty-Cloud';
+                    if (owner && repoName) return `${owner}/${repoName}`;
+                }
+            } catch(e) {}
+            return 'otabek-digital/FaceSecur1ty-Cloud';
         }
 
         function getGitHubToken() {
@@ -2867,6 +2883,30 @@
             closeModal('addDeviceModal');
             renderDeviceList();
             showToast(`✅ "${name || hwid}" qo'shildi!`, "success");
+        }
+
+        function openCreatorSettingsModal() {
+            const cr = cloudDatabase.creator || {};
+            document.getElementById('creatorNameInput').value = cr.name || '';
+            document.getElementById('creatorTelegramInput').value = cr.telegram || '';
+            document.getElementById('creatorTelegramUrlInput').value = cr.telegram_url || '';
+            document.getElementById('creatorChannelInput').value = cr.channel || '';
+            document.getElementById('creatorBotTokenInput').value = cr.bot_token || '8235249447:AAEXUCAxdy0YO_HxEjYbPAljreiifyAO-5E';
+            document.getElementById('creatorSettingsModal').style.display = 'flex';
+        }
+
+        function saveCreatorSettings() {
+            if (!cloudDatabase.creator) cloudDatabase.creator = {};
+            cloudDatabase.creator.name = document.getElementById('creatorNameInput').value.trim();
+            cloudDatabase.creator.telegram = document.getElementById('creatorTelegramInput').value.trim();
+            cloudDatabase.creator.telegram_url = document.getElementById('creatorTelegramUrlInput').value.trim();
+            cloudDatabase.creator.channel = document.getElementById('creatorChannelInput').value.trim();
+            cloudDatabase.creator.bot_token = document.getElementById('creatorBotTokenInput').value.trim();
+            cloudDatabase.updated_at = new Date().toISOString();
+
+            saveToLocalStorageAndCloud();
+            closeModal('creatorSettingsModal');
+            showToast("✅ Admin va Bot sozlamalari saqlandi va GitHub'ga yuborildi!", "success");
         }
 
         function openDevicesJsonModal() {
