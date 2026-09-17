@@ -1,33 +1,92 @@
 {
-  "version": "2.3",
-  "updated_at": "2026-09-14T15:00:00Z",
+  "hub_version": "2.3.0",
+  "updated_at": "2026-09-16T15:15:00Z",
+  "description": "FaceSecurity Universal Cloud Hub (School & Corporate Multi-Edition Infrastructure)",
   "creator": {
-    "name": "FaceSecurity Support",
-    "telegram": "otabek_digital",
-    "telegram_url": "https://t.me/otabek_digital",
-    "channel": "https://t.me/otabek_digital",
-    "support": "https://t.me/otabek_digital",
-    "bot_token": "8235249447:AAEXUCAxdy0YO_HxEjYbPAljreiifyAO-5E"
+    "name": "YEAH_BR0",
+    "telegram": "YEAH_BR0",
+    "telegram_url": "https://t.me/YEAH_BR0",
+    "channel": "https://t.me/YEAH_BR0",
+    "support": "https://t.me/YEAH_BR0",
+    "bot_token": ""
   },
-  "description": "FaceSecurity School Universal Cloud Hub",
+  "products": {
+    "school": {
+      "product_name": "FaceSecurity School",
+      "code_prefix": "FSS",
+      "supported_versions": ["v2.0", "v2.1", "v2.2", "v2.3", "v3.0"],
+      "latest_version": "v2.3",
+      "bot": {
+        "bot_username": "FaceSecurity_school_bot",
+        "bot_token": ""
+      },
+      "default_limits": {
+        "max_cameras": 4,
+        "max_students": 4000,
+        "max_groups": 80
+      }
+    },
+    "corporate": {
+      "product_name": "FaceSecurity Corporate",
+      "code_prefix": "FSC",
+      "supported_versions": ["v1.0", "v1.5", "v2.0", "v2.3"],
+      "latest_version": "v2.3",
+      "bot": {
+        "bot_username": "FaceSecurity_corp_bot",
+        "bot_token": ""
+      },
+      "default_limits": {
+        "max_cameras": 16,
+        "max_employees": 10000,
+        "max_departments": 200
+      }
+    }
+  },
   "global": {
     "status": "ACTIVE",
-    "note": "Barcha maktablar va kompyuterlarni global boshqarish siyosati"
+    "policy": "ALLOW_LICENSED",
+    "note": "FaceSecurity School va FaceSecurity Corporate barcha faol litsenziyali qurilmalar uchun global ruxsat"
   },
   "blacklist": [
-    "FSS-0000-BANNED"
+    "FSS-0000-BANNED",
+    "FSC-0000-BANNED"
   ],
   "devices": {
     "FSS-2114-MAIN": {
       "hwid": "FSS-2114-MAIN",
       "dynamic_code": "FSS-2114-MAIN",
+      "product": "school",
       "raw_pc_name": "DESKTOP-HJBDAM5",
       "pc_name": "Bosh Boshqaruv Kompyuteri (DESKTOP-HJBDAM5)",
       "custom_alias": "FaceSecurity Asosiy Dastur",
       "school": "FaceSecurity School",
       "status": "ACTIVE",
       "ver": "v2.3",
-      "updated_at": "2026-09-14T15:00:00Z"
+      "updated_at": "2026-09-17T16:40:00Z"
+    },
+    "FSS-D7BC-859A": {
+      "hwid": "FSS-D7BC-859A",
+      "dynamic_code": "FSS-D7BC-859A",
+      "product": "school",
+      "raw_pc_name": "DESKTOP-TCEU02E",
+      "pc_name": "DESKTOP-TCEU02E",
+      "custom_alias": "DESKTOP-TCEU02E",
+      "school": "Maktab",
+      "status": "ACTIVE",
+      "ver": "v2.3",
+      "updated_at": "2026-09-17T16:40:00Z"
+    },
+    "FSC-1001-CORP": {
+      "hwid": "FSC-1001-CORP",
+      "dynamic_code": "FSC-1001-CORP",
+      "product": "corporate",
+      "raw_pc_name": "CORP-HEADQUARTERS",
+      "pc_name": "FaceSecurity Corporate Asosiy Server",
+      "custom_alias": "FaceSecurity Corporate HQ",
+      "organization": "FaceSecurity Enterprise",
+      "status": "ACTIVE",
+      "ver": "v2.3",
+      "updated_at": "2026-09-16T15:15:00Z"
     }
   },
   "used_codes": {}
