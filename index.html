@@ -1270,8 +1270,8 @@
 
             <!-- Desktop top action menu -->
             <div class="desktop-header-actions">
-                <a id="telegramAdminLink" href="https://t.me/otabek_digital" target="_blank" class="btn-glass-chip" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.45); color: #38bdf8; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>✈️ Bog'lanish: t.me/otabek_digital</span>
+                <a id="telegramAdminLink" href="https://t.me/YEAH_BR0" target="_blank" class="btn-glass-chip" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.45); color: #38bdf8; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>✈️ Bog'lanish: t.me/YEAH_BR0</span>
                 </a>
                 <div id="githubStatusPill" class="btn-glass-chip active-cloud" onclick="openGitHubSettingsModal()">
                     <span>🌐 Bulut: Real-Vaqt Faol ✅</span>
@@ -1538,12 +1538,12 @@
                 <input type="text" id="creatorNameInput" class="input-dark" placeholder="Otabek S.">
             </div>
             <div class="form-row">
-                <label>Telegram Nik / Username (masalan: otabek_digital)</label>
-                <input type="text" id="creatorTelegramInput" class="input-dark" placeholder="otabek_digital">
+                <label>Telegram Nik / Username (masalan: YEAH_BR0)</label>
+                <input type="text" id="creatorTelegramInput" class="input-dark" placeholder="YEAH_BR0">
             </div>
             <div class="form-row">
-                <label>Telegram Havolasi (masalan: https://t.me/otabek_digital)</label>
-                <input type="text" id="creatorTelegramUrlInput" class="input-dark" placeholder="https://t.me/otabek_digital">
+                <label>Telegram Havolasi (masalan: https://t.me/YEAH_BR0)</label>
+                <input type="text" id="creatorTelegramUrlInput" class="input-dark" placeholder="https://t.me/YEAH_BR0">
             </div>
             <div class="form-row">
                 <label>Telegram Kanal Havolasi (Ixtiyoriy)</label>
@@ -1551,7 +1551,7 @@
             </div>
             <div class="form-row">
                 <label>🤖 Admin Telegram Bot Tokeni (Masofaviy parollarni yuborish uchun)</label>
-                <input type="text" id="creatorBotTokenInput" class="input-dark" placeholder="8235249447:AAEXUCAxdy0YO_HxEjYbPAljreiifyAO-5E" style="font-family: var(--font-mono); font-size: 11.5px;">
+                <input type="text" id="creatorBotTokenInput" class="input-dark" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" style="font-family: var(--font-mono); font-size: 11.5px;">
                 <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">Ushbu token orqali maktab kompyuterlari parollari adminga yuboriladi.</span>
             </div>
             <div class="sheet-footer">
@@ -1633,6 +1633,35 @@
 
     <script>
         // ==========================================
+        // 0. CRYPTO HELPERS & MASTER SECRET
+        // ==========================================
+        function _getMS() {
+            return "FSS_PROD_SECURE_TOKEN_2026_RANDOM_GUARD";
+        }
+
+        async function sha256(message) {
+            if (window.CryptoJS && CryptoJS.SHA256) {
+                return CryptoJS.SHA256(message).toString(CryptoJS.enc.Hex);
+            }
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function hmacSha256(key, message) {
+            if (window.CryptoJS && CryptoJS.HmacSHA256) {
+                return CryptoJS.HmacSHA256(message, key).toString(CryptoJS.enc.Hex);
+            }
+            const enc = new TextEncoder();
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
+            return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ==========================================
         // 1. STEALTH & ANTI-INSPECT PROTECTION
         // ==========================================
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -1645,48 +1674,9 @@
             }
         });
 
-        const _0xM = [70,97,99,101,83,101,99,117,114,105,116,121,95,79,116,97,98,101,107,95,77,97,115,116,101,114,95,50,48,50,54,95,83,101,99,114,101,116,83,97,108,116,95,33,120,57,57];
-        function _getMS() {
-            return String.fromCharCode.apply(null, _0xM);
-        }
-
-        async function sha256(str) {
-            try {
-                if (window.crypto && window.crypto.subtle) {
-                    const buffer = new TextEncoder().encode(str);
-                    const digest = await crypto.subtle.digest('SHA-256', buffer);
-                    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
-                }
-            } catch (e) { }
-            if (window.CryptoJS && CryptoJS.SHA256) {
-                return CryptoJS.SHA256(str).toString(CryptoJS.enc.Hex);
-            }
-            return "";
-        }
-
-        async function hmacSha256(keyStr, messageStr) {
-            try {
-                if (window.crypto && window.crypto.subtle) {
-                    const enc = new TextEncoder();
-                    const keyData = enc.encode(keyStr);
-                    const msgData = enc.encode(messageStr);
-                    const cryptoKey = await crypto.subtle.importKey(
-                        'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-                    );
-                    const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-                    return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-                }
-            } catch (e) { }
-            if (window.CryptoJS && CryptoJS.HmacSHA256) {
-                return CryptoJS.HmacSHA256(messageStr, keyStr).toString(CryptoJS.enc.Hex).toUpperCase();
-            }
-            return "";
-        }
-
         async function calculateSaltedPinHash(pinStr) {
-            const ms = _getMS();
-            const h1 = await sha256(pinStr + "_" + ms);
-            const h2 = await sha256(h1 + "_PEPPER_2026");
+            const h1 = await sha256(pinStr + "_FSS_DYNAMIC_SALT_2026");
+            const h2 = await sha256(h1 + "_PEPPER_SECURE_AUTH");
             return h2;
         }
 
@@ -1715,34 +1705,46 @@
 
             const inputH = await calculateSaltedPinHash(input);
             const customH = localStorage.getItem('fss_custom_salted_pin');
-            const defaultMasterH = await calculateSaltedPinHash("20100111");
-
-            // Configured JSON PIN / Password check (default 20100111):
-            const jsonPin = cloudDatabase && (cloudDatabase.admin_pin || '20100111');
             const jsonPinHash = cloudDatabase && (cloudDatabase.admin_pin_hash || '');
 
-            const isPinMatch = (
-                input === "20100111" ||
-                input === jsonPin ||
+            let isPinMatch = (
                 (jsonPinHash && inputH === jsonPinHash) ||
-                (customH && inputH === customH) ||
-                inputH === defaultMasterH
+                (customH && inputH === customH)
             );
+
+            // Backend API orqali autentifikatsiyani tekshirish
+            let backendAuthOk = false;
+            try {
+                const apiRes = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: input })
+                });
+                if (apiRes.ok) {
+                    const data = await apiRes.json();
+                    if (data && data.token) {
+                        sessionStorage.setItem('fss_admin_token', data.token);
+                        backendAuthOk = true;
+                    }
+                }
+            } catch (e) {}
 
             const lockUntil = parseInt(localStorage.getItem('fss_pin_lockout_until') || '0', 10);
             const now = Date.now();
 
-            if (lockUntil > now && !isPinMatch) {
+            if (lockUntil > now && !isPinMatch && !backendAuthOk) {
                 const remSec = Math.ceil((lockUntil - now) / 1000);
                 errEl.innerText = `⏳ Tizim bloklangan! Qolgan kutish vaqti: ${remSec} soniya`;
                 errEl.style.display = 'block';
                 return;
             }
 
-            if (isPinMatch) {
+            if (isPinMatch || backendAuthOk) {
                 localStorage.removeItem('fss_pin_failed_count');
                 localStorage.removeItem('fss_pin_lockout_until');
-                sessionStorage.setItem('fss_admin_auth', '1');
+                if (!sessionStorage.getItem('fss_admin_token')) {
+                    sessionStorage.setItem('fss_admin_token', inputH);
+                }
                 errEl.style.display = 'none';
                 document.getElementById('pinGateOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'flex';
@@ -1769,7 +1771,7 @@
         });
 
         function logout() {
-            sessionStorage.removeItem('fss_admin_auth');
+            sessionStorage.removeItem('fss_admin_token');
             location.reload();
         }
 
@@ -1793,11 +1795,11 @@
             }
             const h = await calculateSaltedPinHash(p1);
             localStorage.setItem('fss_custom_salted_pin', h);
-            cloudDatabase.admin_pin = p1;
+            cloudDatabase.admin_pin = ""; // Hech qachon ochiq saqlanmaydi
             cloudDatabase.admin_pin_hash = h;
             saveToLocalStorageAndCloud();
             closeModal('pinSettingsModal');
-            showToast("✅ Yangi PIN parol JSON va bazada saqlandi!", "success");
+            showToast("✅ Yangi PIN parol xavfsiz (salted hash) saqlandi!", "success");
         }
 
         function openMobileSettingsModal() {
@@ -1808,7 +1810,9 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        if (sessionStorage.getItem('fss_admin_auth') === '1') {
+        // Faqat haqiqiy xavfsiz session token mavjud bo'lgandagina panelni ochish
+        const sessionToken = sessionStorage.getItem('fss_admin_token');
+        if (sessionToken && sessionToken.length >= 16) {
             document.getElementById('pinGateOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'flex';
             setTimeout(initApp, 50);
@@ -1819,17 +1823,18 @@
         // ==========================================
         let cloudDatabase = {
             version: "2.3",
-            admin_pin: "20100111",
+            admin_pin: "",
             admin_pin_hash: "",
             updated_at: new Date().toISOString(),
             creator: {
-                name: "Otabek S.",
-                telegram: "otabek_digital",
-                telegram_url: "https://t.me/otabek_digital",
-                channel: "https://t.me/facesecurity",
-                support: "https://t.me/otabek_digital"
+                name: "YEAH_BR0",
+                telegram: "YEAH_BR0",
+                telegram_url: "https://t.me/YEAH_BR0",
+                channel: "https://t.me/YEAH_BR0",
+                support: "https://t.me/YEAH_BR0",
+                bot_token: ""
             },
-            description: "FaceSecurity School Universal Cloud Hub v2.3 - otabek-digital",
+            description: "FaceSecurity School Universal Cloud Hub v2.3",
             global: {
                 status: "ACTIVE",
                 updated_at: new Date().toISOString()
@@ -1877,51 +1882,52 @@
 
         function updateCreatorUI() {
             const cr = cloudDatabase.creator || {};
-            const tg = (cr.telegram || "").replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
-            const url = cr.telegram_url || (tg ? `https://t.me/${tg}` : "");
+            let tg = (cr.telegram || "YEAH_BR0").replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '').trim();
+            if (!tg) tg = "YEAH_BR0";
+            const url = cr.telegram_url || `https://t.me/${tg}`;
             
             const linkEl = document.getElementById('telegramAdminLink');
             if (linkEl) {
-                if (tg || url) {
-                    linkEl.href = url || `https://t.me/${tg}`;
-                    linkEl.innerHTML = `<span>✈️ Bog'lanish: t.me/${tg || 'admin'}</span>`;
-                    linkEl.style.display = 'inline-flex';
-                } else {
-                    linkEl.style.display = 'none';
-                }
+                linkEl.href = url;
+                linkEl.innerHTML = `<span>✈️ Bog'lanish: t.me/${tg}</span>`;
+                linkEl.style.display = 'inline-flex';
             }
         }
 
         function openCreatorSettingsModal() {
             const cr = cloudDatabase.creator || {};
-            document.getElementById('creatorNameInput').value = cr.name || 'FaceSecurity Support';
-            document.getElementById('creatorTelegramInput').value = cr.telegram || '';
-            document.getElementById('creatorTelegramUrlInput').value = cr.telegram_url || '';
-            document.getElementById('creatorChannelInput').value = cr.channel || '';
+            document.getElementById('creatorNameInput').value = cr.name || 'YEAH_BR0';
+            document.getElementById('creatorTelegramInput').value = cr.telegram || 'YEAH_BR0';
+            document.getElementById('creatorTelegramUrlInput').value = cr.telegram_url || 'https://t.me/YEAH_BR0';
+            document.getElementById('creatorChannelInput').value = cr.channel || 'https://t.me/YEAH_BR0';
+            document.getElementById('creatorBotTokenInput').value = cr.bot_token || '';
             document.getElementById('creatorSettingsModal').style.display = 'flex';
         }
 
         async function saveCreatorSettings() {
-            const name = document.getElementById('creatorNameInput').value.trim() || 'FaceSecurity Support';
-            let tg = document.getElementById('creatorTelegramInput').value.trim();
-            tg = tg.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
+            const name = document.getElementById('creatorNameInput').value.trim() || 'YEAH_BR0';
+            let tg = document.getElementById('creatorTelegramInput').value.trim() || 'YEAH_BR0';
+            tg = tg.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '').trim();
             let url = document.getElementById('creatorTelegramUrlInput').value.trim();
             if (url && !url.startsWith('http')) url = `https://${url}`;
-            const chan = document.getElementById('creatorChannelInput').value.trim();
+            if (!url) url = `https://t.me/${tg}`;
+            const chan = document.getElementById('creatorChannelInput').value.trim() || url;
+            const botToken = document.getElementById('creatorBotTokenInput').value.trim() || '';
 
             cloudDatabase.creator = {
                 name: name,
                 telegram: tg,
                 telegram_url: url,
                 channel: chan,
-                support: url
+                support: url,
+                bot_token: botToken
             };
             cloudDatabase.updated_at = new Date().toISOString();
 
             updateCreatorUI();
             saveToLocalStorageAndCloud();
             closeModal('creatorSettingsModal');
-            showToast("✈️ Aloqa sozlamalari saqlandi va GitHub'ga yuborildi!", "success");
+            showToast("✈️ Aloqa va Bot sozlamalari saqlandi va yangilandi!", "success");
         }
 
         function openGitHubSettingsModal() {
@@ -2291,8 +2297,26 @@
             const signedPayload = `CMD:${cmdStr}|SIG:${sig}|TS:${ts}`;
             const rawPayload = `${cmdStr}|${ts}|${sig}`;
 
-            // 0. Instant Local HTTP Relay (0ms latency if running on this PC)
+            // 0. Instant Local HTTP Relay & Central Cloud Server Dispatch
+            const adminToken = sessionStorage.getItem('fss_admin_token') || '';
             try {
+                // Central FastAPI Cloud Server
+                fetch('/api/devices/command', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': adminToken ? `Bearer ${adminToken}` : ''
+                    },
+                    body: JSON.stringify({ 
+                        hwid: targetHwid, 
+                        command: cmdStr, 
+                        signature: sig,
+                        admin_token: adminToken,
+                        nonce: `${cleanUpper}_${ts}_${Math.random().toString(36).substring(2, 9)}`
+                    })
+                }).catch(() => {});
+
+                // Local relay
                 fetch('http://127.0.0.1:58742/command', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2883,30 +2907,6 @@
             closeModal('addDeviceModal');
             renderDeviceList();
             showToast(`✅ "${name || hwid}" qo'shildi!`, "success");
-        }
-
-        function openCreatorSettingsModal() {
-            const cr = cloudDatabase.creator || {};
-            document.getElementById('creatorNameInput').value = cr.name || '';
-            document.getElementById('creatorTelegramInput').value = cr.telegram || '';
-            document.getElementById('creatorTelegramUrlInput').value = cr.telegram_url || '';
-            document.getElementById('creatorChannelInput').value = cr.channel || '';
-            document.getElementById('creatorBotTokenInput').value = cr.bot_token || '8235249447:AAEXUCAxdy0YO_HxEjYbPAljreiifyAO-5E';
-            document.getElementById('creatorSettingsModal').style.display = 'flex';
-        }
-
-        function saveCreatorSettings() {
-            if (!cloudDatabase.creator) cloudDatabase.creator = {};
-            cloudDatabase.creator.name = document.getElementById('creatorNameInput').value.trim();
-            cloudDatabase.creator.telegram = document.getElementById('creatorTelegramInput').value.trim();
-            cloudDatabase.creator.telegram_url = document.getElementById('creatorTelegramUrlInput').value.trim();
-            cloudDatabase.creator.channel = document.getElementById('creatorChannelInput').value.trim();
-            cloudDatabase.creator.bot_token = document.getElementById('creatorBotTokenInput').value.trim();
-            cloudDatabase.updated_at = new Date().toISOString();
-
-            saveToLocalStorageAndCloud();
-            closeModal('creatorSettingsModal');
-            showToast("✅ Admin va Bot sozlamalari saqlandi va GitHub'ga yuborildi!", "success");
         }
 
         function openDevicesJsonModal() {
