@@ -1707,12 +1707,15 @@
             const customH = localStorage.getItem('fss_custom_salted_pin');
             const jsonPinHash = cloudDatabase && (cloudDatabase.admin_pin_hash || '');
 
-            const standardPins = ["2026", "7777", "1234", "123456", "admin", "FSS_PROD_SECURE_TOKEN_2026_RANDOM_GUARD"];
-            let isPinMatch = (
-                standardPins.includes(input) ||
-                (jsonPinHash && inputH === jsonPinHash) ||
-                (customH && inputH === customH)
-            );
+            // Faqat bitta asosiy PIN: 20100111 (yoki admin paneldan o'zgartirilgan yangi PIN)
+            const initialDefaultPin = "20100111";
+            let isPinMatch = false;
+
+            if (customH || jsonPinHash) {
+                isPinMatch = (customH && inputH === customH) || (jsonPinHash && inputH === jsonPinHash);
+            } else {
+                isPinMatch = (input === initialDefaultPin);
+            }
 
             // Backend API orqali autentifikatsiyani tekshirish
             let backendAuthOk = false;
