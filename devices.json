@@ -29,10 +29,10 @@
       "pc_name": "DESKTOP-TCEU02E",
       "custom_alias": "DESKTOP-TCEU02E",
       "school": "Maktab",
-      "status": "ACTIVE",
+      "status": "LOCKED",
       "ver": "v2.3",
-      "updated_at": "2026-09-22T02:19:39.863Z",
-      "key_salt": "GQAW",
+      "updated_at": "2026-09-22T02:19:42.346Z",
+      "key_salt": "CNJN",
       "product": "school"
     },
     "FSC-1001-CORP": {
@@ -64,8 +64,8 @@
   "used_codes": {
     "D7BC859A": {
       "hwid": "FSS-D7BC-859A",
-      "key": "FSS-D7BC-859A-MHGE-B2AB050F",
-      "used_at": "2026-09-22T02:19:39.863Z"
+      "key": "FSS-D7BC-859A-GQAW-37C9A7F3",
+      "used_at": "2026-09-22T02:19:42.345Z"
     },
     "C1001CORP": {
       "hwid": "FSS-C100-1COR",
