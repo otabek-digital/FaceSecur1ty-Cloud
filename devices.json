@@ -29,9 +29,9 @@
       "pc_name": "DESKTOP-TCEU02E",
       "custom_alias": "DESKTOP-TCEU02E",
       "school": "Maktab",
-      "status": "ACTIVE",
-      "ver": "v2.4",
-      "updated_at": "2026-09-22T02:19:36.213Z",
+      "status": "LOCKED",
+      "ver": "v2.3",
+      "updated_at": "2026-09-22T02:19:38.004Z",
       "key_salt": "MHGE",
       "product": "school"
     },
