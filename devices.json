@@ -31,8 +31,8 @@
       "school": "Maktab",
       "status": "LOCKED",
       "ver": "v2.3",
-      "updated_at": "2026-09-22T02:19:48.004Z",
-      "key_salt": "CNJN",
+      "updated_at": "2026-09-22T02:19:50.502Z",
+      "key_salt": "VFSX",
       "product": "school"
     },
     "FSC-1001-CORP": {
@@ -64,8 +64,8 @@
   "used_codes": {
     "D7BC859A": {
       "hwid": "FSS-D7BC-859A",
-      "key": "FSS-D7BC-859A-GQAW-37C9A7F3",
-      "used_at": "2026-09-22T02:19:42.345Z"
+      "key": "FSS-D7BC-859A-CNJN-15E31D85",
+      "used_at": "2026-09-22T02:19:50.384Z"
     },
     "C1001CORP": {
       "hwid": "FSS-C100-1COR",
