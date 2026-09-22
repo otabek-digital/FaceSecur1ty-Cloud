@@ -31,7 +31,7 @@
       "school": "Maktab",
       "status": "LOCKED",
       "ver": "v2.3",
-      "updated_at": "2026-09-22T02:20:18.016Z",
+      "updated_at": "2026-09-22T02:20:20.503Z",
       "key_salt": "VFSX",
       "product": "school"
     },
@@ -91,7 +91,12 @@
       "hwid": "🌟 MASTER_DV47",
       "key": "FSS-MST-DV47-349F8542",
       "used_at": "2026-09-22T02:20:18.335Z"
+    },
+    "MASTER_1790043618523": {
+      "hwid": "🌟 MASTER_TT2S",
+      "key": "FSS-MST-TT2S-44B6BF7E",
+      "used_at": "2026-09-22T02:20:18.523Z"
     }
   },
-  "current_master_salt": "TT2S"
+  "current_master_salt": "9964"
 }
