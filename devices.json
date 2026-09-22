@@ -76,7 +76,12 @@
       "hwid": "🌟 MASTER_FBZ8",
       "key": "FSS-MST-FBZ8-8115FAF3",
       "used_at": "2026-09-17T12:03:48.639Z"
+    },
+    "MASTER_1790043610054": {
+      "hwid": "🌟 MASTER_UTAX",
+      "key": "FSS-MST-UTAX-F793385B",
+      "used_at": "2026-09-22T02:20:10.054Z"
     }
   },
-  "current_master_salt": "UTAX"
+  "current_master_salt": "R43H"
 }
